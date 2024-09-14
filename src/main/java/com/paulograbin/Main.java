@@ -20,6 +20,20 @@ import java.util.List;
 public class Main {
 
     public static void main(String[] args) throws IOException, InterruptedException {
+        var basePath = "";
+        
+        if (args.length == 0) {
+            basePath = "/home/paulograbin/Desktop/htmlDownloads";
+        } else {
+            basePath = args[0];
+        }
+
+        Path path = Paths.get(basePath);
+
+        if (!path.toFile().exists()) {
+            path.toFile().createNewFile();
+        }
+
         Instant start = Instant.now();
 
         var servers = List.of(
@@ -42,37 +56,19 @@ public class Main {
 //            HttpHeaders headers = response.headers();
 //            System.out.println(headers.toString());
 
-            saveHtmlToDisk(s, response.body());
-
-//
-//            try {
-//                OkHttpClient client = new OkHttpClient();
-//                Request request = new Request.Builder()
-//                        .url("https://www.lkbennett.com/")
-//                        .method("GET", null)
-//                        .addHeader("accept", "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.7")
-//                        .addHeader("cookie", "ROUTE= " + s + ";")
-//                        .addHeader("upgrade-insecure-requests", "1")
-//                        .addHeader("user-agent", "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/128.0.0.0 Safari/537.36")
-//                        .build();
-//                Response response = client.newCall(request).execute();
-//
-//                saveHtmlToDisk(s, response.body().string());
-//            } catch (IOException e) {
-//                System.err.println(e.getMessage());
-//            }
+            saveHtmlToDisk(basePath, s, response.body());
         }
 
         long millis = Duration.between(start, Instant.now()).toMillis();
         System.out.println("Took " + millis + " milliseconds");
     }
 
-    private static void saveHtmlToDisk(String server, String string) throws IOException {
+    private static void saveHtmlToDisk(String basePath, String server, String string) throws IOException {
         SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss.SSSS");
 
         String formattedDate = sdf.format(new Date());
 
-        Path path = Paths.get("/home/paulograbin/Desktop/downloadHTML/test_" + server + " @ " + formattedDate + ".html");
+        Path path = Paths.get(basePath + "/test_" + server + " @ " + formattedDate + ".html");
 
         path.toFile().createNewFile();
 
