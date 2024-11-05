@@ -37,9 +37,12 @@ public class Main {
         Instant start = Instant.now();
 
         var servers = List.of(
-                ".accstorefront-7c6896c975-rtb2k",
-                ".accstorefront-7c6896c975-cnw5p",
-                ".accstorefront-7c6896c975-tgdgp");
+                ".accstorefront-6c9df9b959-g4hrk",
+                ".accstorefront-6c9df9b959-l6j8q",
+                ".accstorefront-6c9df9b959-qfkxf",
+                ".accstorefront-6c9df9b959-qkc9x",
+                ".accstorefront-6c9df9b959-qxfj7"
+        );
 
         for (String s : servers) {
             System.out.println("calling " + s);
