@@ -1,0 +1,6 @@
+[Unit]
+Description=Service to download the html changes
+
+[Service]
+Type=oneshot
+ExecStart=/home/paulograbin/Desktop/html_downloader/service.sh
