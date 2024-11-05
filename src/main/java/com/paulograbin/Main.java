@@ -19,9 +19,11 @@ import java.util.List;
 
 public class Main {
 
+    private static SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss.SSSS");
+
     public static void main(String[] args) throws IOException, InterruptedException {
         var basePath = "";
-        
+
         if (args.length == 0) {
             basePath = "/home/paulograbin/Desktop/htmlDownloads";
         } else {
@@ -30,9 +32,13 @@ public class Main {
 
         Path path = Paths.get(basePath);
 
-        if (!path.toFile().exists()) {
-            path.toFile().createNewFile();
+        if (!path.toFile().exists() || !path.toFile().isDirectory()) {
+            System.err.println("Path " + basePath + " is not a directory");
+            path.toFile().delete();
+
+            path.toFile().mkdir();
         }
+
 
         Instant start = Instant.now();
 
@@ -44,22 +50,30 @@ public class Main {
                 ".accstorefront-6c9df9b959-qxfj7"
         );
 
-        for (String s : servers) {
-            System.out.println("calling " + s);
+        for (String podName : servers) {
+            System.out.println("calling " + podName);
 
             HttpClient client = HttpClient.newHttpClient();
             HttpRequest request = HttpRequest.newBuilder()
                     .uri(URI.create("https://www.lkbennett.com"))
-                    .setHeader("cookie", "ROUTE= " + s + ";")
+                    .setHeader("cookie", "ROUTE= " + podName + ";")
                     .build();
 
             HttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString());
+
+            var routeCookie = response.headers().allValues("set-cookie").stream().filter(string -> string.startsWith("ROUTE=")).findAny().orElse(podName);
+            if (!podName.equalsIgnoreCase(routeCookie)) {
+                routeCookie = routeCookie.replace("ROUTE=", "");
+                routeCookie = routeCookie.substring(0, routeCookie.indexOf(";"));
+            }
+
+
 //            System.out.println("response body: " + response.body());
 
 //            HttpHeaders headers = response.headers();
 //            System.out.println(headers.toString());
 
-            saveHtmlToDisk(basePath, s, response.body());
+            saveHtmlToDisk(basePath, routeCookie, response.body());
         }
 
         long millis = Duration.between(start, Instant.now()).toMillis();
@@ -67,11 +81,9 @@ public class Main {
     }
 
     private static void saveHtmlToDisk(String basePath, String server, String string) throws IOException {
-        SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss.SSSS");
-
         String formattedDate = sdf.format(new Date());
 
-        Path path = Paths.get(basePath + "/test_" + server + " @ " + formattedDate + ".html");
+        Path path = Paths.get(basePath + "/call_" + server + " @ " + formattedDate + ".html");
 
         path.toFile().createNewFile();
 
