@@ -23,7 +23,9 @@ public class Main {
 
     private static final SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss.SSSS");
 
-    public static void main(String[] args) throws IOException, InterruptedException {
+    public static void main(String[] args) throws InterruptedException {
+        Instant now = Instant.now();
+
         var basePath = "";
 
         if (args.length == 0) {
@@ -94,6 +96,11 @@ public class Main {
 
         var result = compareFiles(file1, file2);
         System.out.println("Result : " + result);
+
+        Instant end = Instant.now();
+
+        long millis1 = Duration.between(now, end).toMillis();
+        System.out.println("Runtime " + millis1 + " ms");
     }
 
     private static boolean compareFiles(File file1, File file2) {
