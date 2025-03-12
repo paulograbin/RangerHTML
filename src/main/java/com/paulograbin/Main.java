@@ -1,8 +1,12 @@
 package com.paulograbin;
 
+import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileNotFoundException;
+import java.io.FileReader;
+import java.io.FileWriter;
 import java.io.IOException;
+import java.io.PrintWriter;
 import java.io.RandomAccessFile;
 import java.net.URI;
 import java.net.http.HttpClient;
@@ -48,11 +52,11 @@ public class Main {
         Instant start = Instant.now();
 
         var servers = List.of(
-                ".accstorefront-6c9df9b959-g4hrk",
-                ".accstorefront-6c9df9b959-l6j8q",
-                ".accstorefront-6c9df9b959-qfkxf",
-                ".accstorefront-6c9df9b959-qkc9x",
-                ".accstorefront-6c9df9b959-qxfj7"
+                ".accstorefront-676d7cf79-6r2sw",
+                ".accstorefront-676d7cf79-chsgn",
+                ".accstorefront-676d7cf79-p4kvj",
+                ".accstorefront-676d7cf79-pz8x9",
+                ".accstorefront-676d7cf79-zj57z"
         );
 
         ExecutorService executorService = Executors.newFixedThreadPool(servers.size());
@@ -273,7 +277,10 @@ public class Main {
     private static void saveHtmlToDisk(String basePath, String server, String content) throws IOException {
         String formattedDate = sdf.format(new Date());
 
-        Path path = Paths.get(basePath + "/call_" + server + " @ " + formattedDate + ".html");
+        int i = server.lastIndexOf("-");
+        server = server.substring(i+1, server.length());
+
+        Path path = Paths.get(basePath + "/" + server + " @ " + formattedDate + ".html");
 
         if (!Files.exists(path)) {
             Files.createFile(path);
