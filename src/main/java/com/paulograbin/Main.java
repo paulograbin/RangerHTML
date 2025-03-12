@@ -86,6 +86,68 @@ public class Main {
 
         long millis = Duration.between(start, Instant.now()).toMillis();
         System.out.println("Took " + millis + " milliseconds");
+
+        File[] files = path.toFile().listFiles();
+
+        var file1 = files[0];
+        var file2 = files[1];
+
+        var result = compareFiles(file1, file2);
+        System.out.println("Result : " + result);
+    }
+
+    private static boolean compareFiles(File file1, File file2) {
+        try (RandomAccessFile randomAccessFile1 = new RandomAccessFile(file1, "r");
+             RandomAccessFile randomAccessFile2 = new RandomAccessFile(file2, "r")) {
+
+            long size1 = randomAccessFile1.length();
+            long size2 = randomAccessFile2.length();
+
+            boolean filesAreEqual = true;
+            long minSize = Math.min(size1, size2);
+
+            // First announce if file sizes are different
+            if (size1 != size2) {
+                System.out.println("File sizes differ: " + file1.getName() + " is " + size1 +
+                        " bytes, " + file2.getName() + " is " + size2 + " bytes");
+                filesAreEqual = false;
+            }
+
+            // Compare byte by byte
+            for (long position = 0; position < minSize; position++) {
+                randomAccessFile1.seek(position);
+                randomAccessFile2.seek(position);
+
+                byte byte1 = randomAccessFile1.readByte();
+                byte byte2 = randomAccessFile2.readByte();
+
+                if (byte1 != byte2) {
+                    filesAreEqual = false;
+                    System.out.println("Divergence at position " + position +
+                            ": " + file1.getName() + " has " + byte1 +
+                            " (0x" + String.format("%02X", byte1) + "), " +
+                            file2.getName() + " has " + byte2 +
+                            " (0x" + String.format("%02X", byte2) + ")");
+                }
+            }
+
+            // If one file is longer than the other, report the extra content
+            if (size1 > size2) {
+                System.out.println(file1.getName() + " has " + (size1 - size2) +
+                        " additional bytes starting at position " + size2);
+            } else if (size2 > size1) {
+                System.out.println(file2.getName() + " has " + (size2 - size1) +
+                        " additional bytes starting at position " + size1);
+            }
+
+            return filesAreEqual;
+        } catch (FileNotFoundException e) {
+            System.err.println("File not found: " + e.getMessage());
+            throw new RuntimeException(e);
+        } catch (IOException e) {
+            System.err.println("IO error during comparison: " + e.getMessage());
+            throw new RuntimeException(e);
+        }
     }
 
     private static void saveHtmlToDisk(String basePath, String server, String content) throws IOException {
