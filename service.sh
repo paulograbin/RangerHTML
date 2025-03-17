@@ -1,1 +1,3 @@
-./download_native_experiment
+#!/bin/zsh
+
+/opt/htmlDownloader/download_native_experiment
