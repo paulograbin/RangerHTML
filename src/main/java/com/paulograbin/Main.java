@@ -1,12 +1,8 @@
 package com.paulograbin;
 
-import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileNotFoundException;
-import java.io.FileReader;
-import java.io.FileWriter;
 import java.io.IOException;
-import java.io.PrintWriter;
 import java.io.RandomAccessFile;
 import java.net.URI;
 import java.net.http.HttpClient;
@@ -20,8 +16,11 @@ import java.nio.file.StandardOpenOption;
 import java.text.SimpleDateFormat;
 import java.time.Duration;
 import java.time.Instant;
+import java.util.ArrayList;
 import java.util.Date;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
@@ -37,6 +36,7 @@ public class Main {
 
         if (args.length == 0) {
             basePath = "/home/paulograbin/Desktop/htmlDownloads";
+//            basePath = "/home/paulograbin/Desktop/aaaa";
         } else {
             basePath = args[0];
         }
@@ -49,23 +49,23 @@ public class Main {
             path.toFile().mkdir();
         }
 
-        Instant start = Instant.now();
-
         var servers = List.of(
-                ".accstorefront-676d7cf79-6r2sw",
-                ".accstorefront-676d7cf79-chsgn",
-                ".accstorefront-676d7cf79-p4kvj",
-                ".accstorefront-676d7cf79-pz8x9",
-                ".accstorefront-676d7cf79-zj57z"
+                ".accstorefront-6849b9bc6-2zxdd",
+                ".accstorefront-6849b9bc6-cvm8b",
+                ".accstorefront-6849b9bc6-d5z7k",
+                ".accstorefront-6849b9bc6-tgz29",
+                ".accstorefront-6849b9bc6-zcp4x"
         );
 
+        Set<String> actualServers = new HashSet<>(5);
         ExecutorService executorService = Executors.newFixedThreadPool(servers.size());
+        List<File> downloadedFiles = new ArrayList<>();
 
         for (String podName : servers) {
             String finalBasePath = basePath;
             executorService.submit(() -> {
                 try {
-                    System.out.println("Calling " + podName);
+
                     HttpClient client = HttpClient.newHttpClient();
                     HttpRequest request = HttpRequest.newBuilder()
                             .uri(URI.create("https://www.lkbennett.com"))
@@ -78,14 +78,24 @@ public class Main {
                             .filter(string -> string.startsWith("ROUTE="))
                             .findAny()
                             .orElse(podName);
+
                     if (!podName.equalsIgnoreCase(routeCookie)) {
                         routeCookie = routeCookie.replace("ROUTE=", "");
                         routeCookie = routeCookie.substring(0, routeCookie.indexOf(";"));
                     }
 
-                    saveHtmlToDisk(finalBasePath, routeCookie, response.body());
+                    actualServers.add(routeCookie);
+
+                    if (podName.equalsIgnoreCase(routeCookie)) {
+                        System.out.println("Calling " + podName + " and got same");
+                    } else {
+                        System.out.println("Calling " + podName + " but got " + routeCookie);
+                    }
+
+                    var file = saveHtmlToDisk(finalBasePath, routeCookie, response.body());
+                    downloadedFiles.add(file.toFile());
                 } catch (IOException | InterruptedException e) {
-                    e.printStackTrace();
+                    System.err.println("Could not download the file: " + e.getMessage() + ", " + e.getCause());
                 }
             });
         }
@@ -93,21 +103,70 @@ public class Main {
         executorService.shutdown();
         executorService.awaitTermination(3, TimeUnit.SECONDS);
 
-        long millis = Duration.between(start, Instant.now()).toMillis();
-        System.out.println("Took " + millis + " milliseconds");
+        postDownloadChecks(downloadedFiles);
 
-        File[] files = path.toFile().listFiles();
+        System.out.println("Actual servers:");
+        for (String actual : actualServers) {
+            System.out.println(actual);
+        }
 
-        var file1 = files[0];
-        var file2 = files[1];
+//        var result = compareFiles(file1, file2);
+//        System.out.println("Result : " + result);
 
-        var result = compareFiles(file1, file2);
-        System.out.println("Result : " + result);
-
-        Instant end = Instant.now();
-
-        long millis1 = Duration.between(now, end).toMillis();
+        long millis1 = Duration.between(now, Instant.now()).toMillis();
         System.out.println("Runtime " + millis1 + " ms");
+    }
+
+    private static void postDownloadChecks(List<File> downloadedFiles) {
+        long standardLength = downloadedFiles.getFirst().length();
+        short deviationCount = 0;
+
+        for (File file : downloadedFiles) {
+            long fileSize = file.length();
+
+            if (fileSize != standardLength) {
+                deviationCount++;
+            }
+
+            System.out.println("File " + file.getName() + " has size: " + fileSize);
+        }
+
+        System.out.println("Deviation count " + deviationCount);
+
+        if (deviationCount > 0) {
+            HttpClient client = HttpClient.newHttpClient();
+            HttpRequest request = HttpRequest.newBuilder()
+                    .uri(URI.create("http://ntfy.sh/htmlDifferences"))
+                    .POST(HttpRequest.BodyPublishers.ofString("Diff of " + deviationCount))
+                    .build();
+
+            try {
+                HttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString());
+
+                System.out.println("Go response: " + response.statusCode());
+            } catch (IOException | InterruptedException e) {
+                throw new RuntimeException(e);
+            }
+        }
+    }
+
+    private static Path saveHtmlToDisk(String basePath, String server, String content) throws IOException {
+        String formattedDate = sdf.format(new Date());
+
+        int i = server.lastIndexOf("-");
+        server = server.substring(i + 1, server.length());
+
+        Path path = Paths.get(basePath + "/" + server + " @ " + formattedDate + ".html");
+
+        if (!Files.exists(path)) {
+            Files.createFile(path);
+        }
+
+        try (var writer = Files.newBufferedWriter(path, StandardCharsets.UTF_8, StandardOpenOption.WRITE)) {
+            writer.write(content);
+        }
+
+        return path;
     }
 
     private static boolean compareFiles(File file1, File file2) {
@@ -271,23 +330,6 @@ public class Main {
             return '↓'; // Carriage return symbol
         } else {
             return '·'; // Non-printable character
-        }
-    }
-
-    private static void saveHtmlToDisk(String basePath, String server, String content) throws IOException {
-        String formattedDate = sdf.format(new Date());
-
-        int i = server.lastIndexOf("-");
-        server = server.substring(i+1, server.length());
-
-        Path path = Paths.get(basePath + "/" + server + " @ " + formattedDate + ".html");
-
-        if (!Files.exists(path)) {
-            Files.createFile(path);
-        }
-
-        try (var writer = Files.newBufferedWriter(path, StandardCharsets.UTF_8, StandardOpenOption.WRITE)) {
-            writer.write(content);
         }
     }
 }
