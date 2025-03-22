@@ -29,7 +29,7 @@ public class Main {
 
     private static final SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss.SSSS");
 
-    public static void main(String[] args) throws InterruptedException {
+    public static void main(String[] args) throws InterruptedException, IOException {
         Instant now = Instant.now();
 
         var basePath = "";
@@ -117,7 +117,7 @@ public class Main {
         System.out.println("Runtime " + millis1 + " ms");
     }
 
-    private static void postDownloadChecks(List<File> downloadedFiles) {
+    private static void postDownloadChecks(List<File> downloadedFiles) throws IOException {
         long standardLength = downloadedFiles.getFirst().length();
         short deviationCount = 0;
 
@@ -147,6 +147,20 @@ public class Main {
             } catch (IOException | InterruptedException e) {
                 throw new RuntimeException(e);
             }
+        } else {
+            var name = downloadedFiles.getFirst().getName();
+            var basePath = downloadedFiles.getFirst().getParent();
+
+            for (File downloadedFile : downloadedFiles) {
+                downloadedFile.delete();
+            }
+
+            int i = name.indexOf("@");
+            var newName =  name.substring(i);
+
+            System.out.println(newName);
+            var tombStoneFile = new File(basePath + "/tombstone " + newName);
+            tombStoneFile.createNewFile();
         }
     }
 
