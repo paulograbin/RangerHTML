@@ -1,7 +1,9 @@
 package com.paulograbin;
 
+import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileNotFoundException;
+import java.io.FileWriter;
 import java.io.IOException;
 import java.io.RandomAccessFile;
 import java.net.URI;
@@ -50,11 +52,11 @@ public class Main {
         }
 
         var servers = List.of(
-                ".accstorefront-6849b9bc6-2zxdd",
-                ".accstorefront-6849b9bc6-cvm8b",
-                ".accstorefront-6849b9bc6-d5z7k",
-                ".accstorefront-6849b9bc6-tgz29",
-                ".accstorefront-6849b9bc6-zcp4x"
+                ".accstorefront-ff7d58c9c-5mr9t",
+                ".accstorefront-ff7d58c9c-6tnlf",
+                ".accstorefront-ff7d58c9c-k468c",
+                ".accstorefront-ff7d58c9c-ktq48",
+                ".accstorefront-ff7d58c9c-nszx9"
         );
 
         Set<String> actualServers = new HashSet<>(5);
@@ -93,6 +95,8 @@ public class Main {
                     }
 
                     var file = saveHtmlToDisk(finalBasePath, routeCookie, response.body());
+                    filterFileContent(file);
+
                     downloadedFiles.add(file.toFile());
                 } catch (IOException | InterruptedException e) {
                     System.err.println("Could not download the file: " + e.getMessage() + ", " + e.getCause());
@@ -101,7 +105,7 @@ public class Main {
         }
 
         executorService.shutdown();
-        executorService.awaitTermination(3, TimeUnit.SECONDS);
+        executorService.awaitTermination(10, TimeUnit.SECONDS);
 
         postDownloadChecks(downloadedFiles);
 
@@ -115,6 +119,28 @@ public class Main {
 
         long millis1 = Duration.between(now, Instant.now()).toMillis();
         System.out.println("Runtime " + millis1 + " ms");
+    }
+
+    private static void filterFileContent(Path file) throws IOException {
+        String htmlContent = new String(Files.readAllBytes(file));
+
+        // Split the HTML into lines
+        String[] lines = htmlContent.split("\n");
+
+        // Filter out lines containing "CSRF"
+        StringBuilder filteredContent = new StringBuilder();
+        for (String line : lines) {
+            if (!line.contains("CSRF") && !line.contains("<p>nowTime:")) {
+                filteredContent.append(line).append(System.lineSeparator());
+            }
+        }
+
+        // Save the filtered content back to the original file
+        try (BufferedWriter writer = new BufferedWriter(new FileWriter(file.toFile()))) {
+            writer.write(filteredContent.toString());
+        }
+
+        System.out.println("File processed successfully!");
     }
 
     private static void postDownloadChecks(List<File> downloadedFiles) throws IOException {
@@ -133,35 +159,35 @@ public class Main {
 
         System.out.println("Deviation count " + deviationCount);
 
-        if (deviationCount > 0) {
-            HttpClient client = HttpClient.newHttpClient();
-            HttpRequest request = HttpRequest.newBuilder()
-                    .uri(URI.create("http://ntfy.sh/htmlDifferences"))
-                    .POST(HttpRequest.BodyPublishers.ofString("Diff of " + deviationCount))
-                    .build();
-
-            try {
-                HttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString());
-
-                System.out.println("Go response: " + response.statusCode());
-            } catch (IOException | InterruptedException e) {
-                throw new RuntimeException(e);
-            }
-        } else {
-            var name = downloadedFiles.getFirst().getName();
-            var basePath = downloadedFiles.getFirst().getParent();
-
-            for (File downloadedFile : downloadedFiles) {
-                downloadedFile.delete();
-            }
-
-            int i = name.indexOf("@");
-            var newName =  name.substring(i);
-
-            System.out.println(newName);
-            var tombStoneFile = new File(basePath + "/tombstone " + newName);
-            tombStoneFile.createNewFile();
-        }
+//        if (deviationCount > 0) {
+//            HttpClient client = HttpClient.newHttpClient();
+//            HttpRequest request = HttpRequest.newBuilder()
+//                    .uri(URI.create("http://ntfy.sh/htmlDifferences"))
+//                    .POST(HttpRequest.BodyPublishers.ofString("Diff of " + deviationCount))
+//                    .build();
+//
+//            try {
+//                HttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString());
+//
+//                System.out.println("Go response: " + response.statusCode());
+//            } catch (IOException | InterruptedException e) {
+//                throw new RuntimeException(e);
+//            }
+//        } else {
+//            var name = downloadedFiles.getFirst().getName();
+//            var basePath = downloadedFiles.getFirst().getParent();
+//
+//            for (File downloadedFile : downloadedFiles) {
+//                downloadedFile.delete();
+//            }
+//
+//            int i = name.indexOf("@");
+//            var newName =  name.substring(i);
+//
+//            System.out.println(newName);
+//            var tombStoneFile = new File(basePath + "/tombstone " + newName);
+//            tombStoneFile.createNewFile();
+//        }
     }
 
     private static Path saveHtmlToDisk(String basePath, String server, String content) throws IOException {
@@ -175,6 +201,9 @@ public class Main {
         if (!Files.exists(path)) {
             Files.createFile(path);
         }
+
+        String[] split = content.split("\n");
+        System.out.println(split.length);
 
         try (var writer = Files.newBufferedWriter(path, StandardCharsets.UTF_8, StandardOpenOption.WRITE)) {
             writer.write(content);
