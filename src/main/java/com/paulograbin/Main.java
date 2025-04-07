@@ -37,9 +37,12 @@ public class Main {
         var basePath = "";
 
         if (args.length == 0) {
-            basePath = "/home/paulograbin/Desktop/htmlDownloads";
-//            basePath = "/home/paulograbin/Desktop/aaaa";
+            final var homeDirectoryForCurrentUser = System.getProperty("user.home");
+            basePath = homeDirectoryForCurrentUser + "/Desktop/html";
+
+            System.out.println("Using current user's home directory");
         } else {
+            System.out.println("Using directory provided as parameter");
             basePath = args[0];
         }
 
