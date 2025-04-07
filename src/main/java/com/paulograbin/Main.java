@@ -205,9 +205,6 @@ public class Main {
             Files.createFile(path);
         }
 
-        String[] split = content.split("\n");
-        System.out.println(split.length);
-
         try (var writer = Files.newBufferedWriter(path, StandardCharsets.UTF_8, StandardOpenOption.WRITE)) {
             writer.write(content);
         }
