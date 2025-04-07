@@ -162,35 +162,35 @@ public class Main {
 
         System.out.println("Deviation count " + deviationCount);
 
-//        if (deviationCount > 0) {
-//            HttpClient client = HttpClient.newHttpClient();
-//            HttpRequest request = HttpRequest.newBuilder()
-//                    .uri(URI.create("http://ntfy.sh/htmlDifferences"))
-//                    .POST(HttpRequest.BodyPublishers.ofString("Diff of " + deviationCount))
-//                    .build();
-//
-//            try {
-//                HttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString());
-//
-//                System.out.println("Go response: " + response.statusCode());
-//            } catch (IOException | InterruptedException e) {
-//                throw new RuntimeException(e);
-//            }
-//        } else {
-//            var name = downloadedFiles.getFirst().getName();
-//            var basePath = downloadedFiles.getFirst().getParent();
-//
-//            for (File downloadedFile : downloadedFiles) {
-//                downloadedFile.delete();
-//            }
-//
-//            int i = name.indexOf("@");
-//            var newName =  name.substring(i);
-//
-//            System.out.println(newName);
-//            var tombStoneFile = new File(basePath + "/tombstone " + newName);
-//            tombStoneFile.createNewFile();
-//        }
+        if (deviationCount > 0) {
+            HttpClient client = HttpClient.newHttpClient();
+            HttpRequest request = HttpRequest.newBuilder()
+                    .uri(URI.create("http://ntfy.sh/htmlDifferences"))
+                    .POST(HttpRequest.BodyPublishers.ofString("Diff of " + deviationCount))
+                    .build();
+
+            try {
+                HttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString());
+
+                System.out.println("Go response: " + response.statusCode());
+            } catch (IOException | InterruptedException e) {
+                throw new RuntimeException(e);
+            }
+        } else {
+            var name = downloadedFiles.getFirst().getName();
+            var basePath = downloadedFiles.getFirst().getParent();
+
+            for (File downloadedFile : downloadedFiles) {
+                downloadedFile.delete();
+            }
+
+            int i = name.indexOf("@");
+            var newName =  name.substring(i);
+
+            System.out.println(newName);
+            var tombStoneFile = new File(basePath + "/tombstone " + newName);
+            tombStoneFile.createNewFile();
+        }
     }
 
     private static Path saveHtmlToDisk(String basePath, String server, String content) throws IOException {
