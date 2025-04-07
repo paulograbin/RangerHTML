@@ -46,7 +46,7 @@ public class Main {
         Path path = Paths.get(basePath);
 
         if (!path.toFile().exists() || !path.toFile().isDirectory()) {
-            System.err.println("Path " + basePath + " is not a directory");
+            System.err.println("Path " + basePath + " does not exist or is not a directory, removing it and creating location...");
             path.toFile().delete();
             path.toFile().mkdir();
         }
