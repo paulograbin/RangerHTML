@@ -106,7 +106,7 @@ public class Main {
 
                     downloadedFiles.add(file.toFile());
                 } catch (IOException | InterruptedException e) {
-                    System.err.println("Could not download the file: " + e.getMessage() + ", " + e.getCause());
+                    System.err.println("Could not download the file: " + e.getMessage() + ", because " + e.getCause());
                 }
             });
         }
