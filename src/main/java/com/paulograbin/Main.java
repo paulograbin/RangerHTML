@@ -1,5 +1,7 @@
 package com.paulograbin;
 
+import org.apache.commons.lang3.RandomStringUtils;
+
 import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileNotFoundException;
@@ -29,7 +31,7 @@ import java.util.concurrent.TimeUnit;
 
 public class Main {
 
-    private static final SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss.SSSS");
+    private static final SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH-mm-ss-SSSS");
 
     public static void main(String[] args) throws InterruptedException, IOException {
         Instant now = Instant.now();
@@ -66,6 +68,8 @@ public class Main {
         ExecutorService executorService = Executors.newFixedThreadPool(servers.size());
         List<File> downloadedFiles = new ArrayList<>();
 
+        var randomString = RandomStringUtils.secure().nextAlphanumeric(5);
+
         for (String podName : servers) {
             String finalBasePath = basePath;
             executorService.submit(() -> {
@@ -97,7 +101,7 @@ public class Main {
                         System.out.println("Calling " + podName + " but got " + routeCookie);
                     }
 
-                    var file = saveHtmlToDisk(finalBasePath, routeCookie, response.body());
+                    var file = saveHtmlToDisk(finalBasePath, routeCookie, response.body(), randomString);
                     filterFileContent(file);
 
                     downloadedFiles.add(file.toFile());
@@ -193,13 +197,13 @@ public class Main {
         }
     }
 
-    private static Path saveHtmlToDisk(String basePath, String server, String content) throws IOException {
+    private static Path saveHtmlToDisk(String basePath, String server, String content, String randomString) throws IOException {
         String formattedDate = sdf.format(new Date());
 
         int i = server.lastIndexOf("-");
-        server = server.substring(i + 1, server.length());
+        server = server.substring(i + 1);
 
-        Path path = Paths.get(basePath + "/" + server + " @ " + formattedDate + ".html");
+        Path path = Paths.get(basePath + "/" + formattedDate + " @ " + randomString + " @ " + server + ".html");
 
         if (!Files.exists(path)) {
             Files.createFile(path);
