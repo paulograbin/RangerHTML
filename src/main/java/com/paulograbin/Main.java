@@ -165,7 +165,7 @@ public class Main {
         if (deviationCount > 0) {
             HttpClient client = HttpClient.newHttpClient();
             HttpRequest request = HttpRequest.newBuilder()
-                    .uri(URI.create("http://ntfy.sh/htmlDifferences"))
+                    .uri(URI.create("https://ntfy.sh/htmlDifferences"))
                     .POST(HttpRequest.BodyPublishers.ofString("Diff of " + deviationCount))
                     .build();
 
