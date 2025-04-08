@@ -146,8 +146,6 @@ public class Main {
         try (BufferedWriter writer = new BufferedWriter(new FileWriter(file.toFile()))) {
             writer.write(filteredContent.toString());
         }
-
-        System.out.println("File processed successfully!");
     }
 
     private static void postDownloadChecks(List<File> downloadedFiles) throws IOException {
