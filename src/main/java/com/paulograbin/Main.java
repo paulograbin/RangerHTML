@@ -189,7 +189,7 @@ public class Main {
             }
 
             int i = name.indexOf("@");
-            var newName =  name.substring(i);
+            var newName =  name.substring(0, i);
 
             System.out.println(newName);
             var tombStoneFile = new File(basePath + "/tombstone " + newName);
