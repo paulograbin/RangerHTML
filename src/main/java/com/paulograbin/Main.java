@@ -1,6 +1,15 @@
 package com.paulograbin;
 
+import com.paulograbin.web.ExternalAssetController;
+import com.paulograbin.web.FilesController;
+import io.javalin.Javalin;
+import io.javalin.event.HandlerMetaInfo;
+import io.javalin.event.LifecycleEventListener;
+import io.javalin.http.staticfiles.Location;
+import io.javalin.vue.VueComponent;
 import org.apache.commons.lang3.RandomStringUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.BufferedWriter;
 import java.io.File;
@@ -28,104 +37,139 @@ import java.util.Set;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
+import java.util.function.Consumer;
 
 public class Main {
 
     private static final SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH-mm-ss-SSSS");
+    private static final Logger LOG = LoggerFactory.getLogger(Main.class);
 
     public static void main(String[] args) throws InterruptedException, IOException {
-        Instant now = Instant.now();
+        var app = Javalin.create(config -> {
+            config.staticFiles.add("/public", Location.CLASSPATH);
+            config.staticFiles.enableWebjars();
+//            config.bundledPlugins.enableDevLogging();
+            config.vue.vueInstanceNameInJs = "app";
+        });
 
-        var basePath = "";
+        LifecycleEventListener aa = () -> LOG.info("STARTOU ESSA BAGACA");
+        Consumer<HandlerMetaInfo> bb = (HandlerMetaInfo handlerMetaInfo) -> LOG.info("HandlerMetaInfo {}", handlerMetaInfo);
 
-        if (args.length == 0) {
-            final var homeDirectoryForCurrentUser = System.getProperty("user.home");
-            basePath = homeDirectoryForCurrentUser + "/Desktop/html";
+        app.events(event -> event.serverStarted(aa));
+        app.events(event -> event.handlerAdded(bb));
 
-            System.out.println("Using current user's home directory");
-        } else {
-            System.out.println("Using directory provided as parameter");
-            basePath = args[0];
-        }
+        app.get("/", new VueComponent("hello-world"));
+        app.get("/file/{fileName}", FilesController::loadFile);
+        app.get("/_ui/*", ExternalAssetController::get);
+        app.get("/api/files", FilesController::getAll);
 
-        Path path = Paths.get(basePath);
 
-        if (!path.toFile().exists() || !path.toFile().isDirectory()) {
-            System.err.println("Path " + basePath + " does not exist or is not a directory, removing it and creating location...");
-            path.toFile().delete();
-            path.toFile().mkdir();
-        }
+        app.get("/_s/login-status", FakeController::getLogin);
+        app.get("/cart/miniCartUpdate", FakeController::getMiniCart);
+        app.get("/globalecountry/info", FakeController::getInfo);
 
-        var servers = List.of(
-                ".accstorefront-ff7d58c9c-5mr9t",
-                ".accstorefront-ff7d58c9c-6tnlf",
-                ".accstorefront-ff7d58c9c-k468c",
-                ".accstorefront-ff7d58c9c-ktq48",
-                ".accstorefront-ff7d58c9c-nszx9"
-        );
+//        app.before(ctx -> LOG.info("Handling call to {}", ctx.path()));
 
-        Set<String> actualServers = new HashSet<>(5);
-        ExecutorService executorService = Executors.newFixedThreadPool(servers.size());
-        List<File> downloadedFiles = new ArrayList<>();
 
-        var randomString = RandomStringUtils.secure().nextAlphanumeric(5);
+        app.start(7070);
 
-        for (String podName : servers) {
-            String finalBasePath = basePath;
-            executorService.submit(() -> {
-                try {
 
-                    HttpClient client = HttpClient.newHttpClient();
-                    HttpRequest request = HttpRequest.newBuilder()
-                            .uri(URI.create("https://www.lkbennett.com"))
-                            .setHeader("cookie", "ROUTE=" + podName + ";")
-                            .build();
 
-                    HttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString());
-
-                    var routeCookie = response.headers().allValues("set-cookie").stream()
-                            .filter(string -> string.startsWith("ROUTE="))
-                            .findAny()
-                            .orElse(podName);
-
-                    if (!podName.equalsIgnoreCase(routeCookie)) {
-                        routeCookie = routeCookie.replace("ROUTE=", "");
-                        routeCookie = routeCookie.substring(0, routeCookie.indexOf(";"));
-                    }
-
-                    actualServers.add(routeCookie);
-
-                    if (podName.equalsIgnoreCase(routeCookie)) {
-                        System.out.println("Calling " + podName + " and got same");
-                    } else {
-                        System.out.println("Calling " + podName + " but got " + routeCookie);
-                    }
-
-                    var file = saveHtmlToDisk(finalBasePath, routeCookie, response.body(), randomString);
-                    filterFileContent(file);
-
-                    downloadedFiles.add(file.toFile());
-                } catch (IOException | InterruptedException e) {
-                    System.err.println("Could not download the file: " + e.getMessage() + ", because " + e.getCause());
-                }
-            });
-        }
-
-        executorService.shutdown();
-        executorService.awaitTermination(10, TimeUnit.SECONDS);
-
-        postDownloadChecks(downloadedFiles);
-
-        System.out.println("Actual servers:");
-        for (String actual : actualServers) {
-            System.out.println(actual);
-        }
-
-//        var result = compareFiles(file1, file2);
-//        System.out.println("Result : " + result);
-
-        long millis1 = Duration.between(now, Instant.now()).toMillis();
-        System.out.println("Runtime " + millis1 + " ms");
+//        Instant now = Instant.now();
+//
+//        var basePath = "";
+//
+//        if (args.length == 0) {
+//            final var homeDirectoryForCurrentUser = System.getProperty("user.home");
+//            basePath = homeDirectoryForCurrentUser + "/Desktop/html";
+//
+//            System.out.println("Using current user's home directory");
+//        } else {
+//            System.out.println("Using directory provided as parameter");
+//            basePath = args[0];
+//        }
+//
+//        Path path = Paths.get(basePath);
+//
+//        if (!path.toFile().exists() || !path.toFile().isDirectory()) {
+//            System.err.println("Path " + basePath + " does not exist or is not a directory, removing it and creating location...");
+//            path.toFile().delete();
+//            path.toFile().mkdir();
+//        }
+//
+//        var servers = List.of(
+//                ".accstorefront-ff7d58c9c-5mr9t",
+//                ".accstorefront-ff7d58c9c-6tnlf",
+//                ".accstorefront-ff7d58c9c-k468c",
+//                ".accstorefront-ff7d58c9c-ktq48",
+//                ".accstorefront-ff7d58c9c-nszx9"
+//        );
+//
+//
+//        Set<String> actualServers = new HashSet<>(5);
+//        ExecutorService executorService = Executors.newFixedThreadPool(servers.size());
+//        List<File> downloadedFiles = new ArrayList<>();
+//
+//        var randomString = RandomStringUtils.secure().nextAlphanumeric(5);
+//
+//        servers = new ArrayList<>();
+//
+//        for (String podName : servers) {
+//            String finalBasePath = basePath;
+//            executorService.submit(() -> {
+//                try {
+//
+//                    HttpClient client = HttpClient.newHttpClient();
+//                    HttpRequest request = HttpRequest.newBuilder()
+//                            .uri(URI.create("https://www.lkbennett.com"))
+//                            .setHeader("cookie", "ROUTE=" + podName + ";")
+//                            .build();
+//
+//                    HttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString());
+//
+//                    var routeCookie = response.headers().allValues("set-cookie").stream()
+//                            .filter(string -> string.startsWith("ROUTE="))
+//                            .findAny()
+//                            .orElse(podName);
+//
+//                    if (!podName.equalsIgnoreCase(routeCookie)) {
+//                        routeCookie = routeCookie.replace("ROUTE=", "");
+//                        routeCookie = routeCookie.substring(0, routeCookie.indexOf(";"));
+//                    }
+//
+//                    actualServers.add(routeCookie);
+//
+//                    if (podName.equalsIgnoreCase(routeCookie)) {
+//                        System.out.println("Calling " + podName + " and got same");
+//                    } else {
+//                        System.out.println("Calling " + podName + " but got " + routeCookie);
+//                    }
+//
+//                    var file = saveHtmlToDisk(finalBasePath, routeCookie, response.body(), randomString);
+//                    filterFileContent(file);
+//
+//                    downloadedFiles.add(file.toFile());
+//                } catch (IOException | InterruptedException e) {
+//                    System.err.println("Could not download the file: " + e.getMessage() + ", because " + e.getCause());
+//                }
+//            });
+//        }
+//
+//        executorService.shutdown();
+//        executorService.awaitTermination(10, TimeUnit.SECONDS);
+//
+//        postDownloadChecks(downloadedFiles);
+//
+//        System.out.println("Actual servers:");
+//        for (String actual : actualServers) {
+//            System.out.println(actual);
+//        }
+//
+////        var result = compareFiles(file1, file2);
+////        System.out.println("Result : " + result);
+//
+//        long millis1 = Duration.between(now, Instant.now()).toMillis();
+//        System.out.println("Runtime " + millis1 + " ms");
     }
 
     private static void filterFileContent(Path file) throws IOException {
@@ -149,6 +193,10 @@ public class Main {
     }
 
     private static void postDownloadChecks(List<File> downloadedFiles) throws IOException {
+        if (downloadedFiles.isEmpty()){
+            return;
+        }
+
         long standardLength = downloadedFiles.getFirst().length();
         short deviationCount = 0;
 
@@ -187,7 +235,7 @@ public class Main {
             }
 
             int i = name.indexOf("@");
-            var newName =  name.substring(0, i);
+            var newName = name.substring(0, i);
 
             System.out.println(newName);
             var tombStoneFile = new File(basePath + "/tombstone " + newName);
