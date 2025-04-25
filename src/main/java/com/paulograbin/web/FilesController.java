@@ -11,7 +11,9 @@ import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.text.SimpleDateFormat;
 import java.util.Arrays;
+import java.util.Date;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -20,17 +22,39 @@ public class FilesController {
 
     private static final Logger LOG = LoggerFactory.getLogger(FilesController.class);
 
+    private static final SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd");
+
     public static void getAll(@NotNull Context context) {
+//        var basePath = "/home/paulograbin/Dropbox/htmlDownloads";
+//        Path path = Path.of(basePath);
+//
+//        File file = path.toFile();
+//
+//        List<String> list = Arrays.stream(Objects.requireNonNull(file.listFiles()))
+//                .map(File::getName)
+//                .sorted()
+//                .toList();
+//
+
+        getMostRecentOnes(context);
+
+//        context.json(list);
+    }
+
+    public static void getMostRecentOnes(@NotNull Context context) {
         var basePath = "/home/paulograbin/Dropbox/htmlDownloads";
         Path path = Path.of(basePath);
 
         File file = path.toFile();
 
-        List<String> list = Arrays.stream(Objects.requireNonNull(file.listFiles()))
-                .map(File::getName)
-                .sorted()
-                .toList();
+        String formattedDate = sdf.format(new Date());
 
+        List<String> list = Arrays.stream(Objects.requireNonNull(file.listFiles()))
+                .filter(f -> f.getName().contains(formattedDate))
+                .map(f -> {
+                    return f.getName();
+                })
+                .toList();
 
         context.json(list);
     }
