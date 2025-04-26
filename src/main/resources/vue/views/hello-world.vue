@@ -5,8 +5,16 @@
 
   <app-frame>
     <ul class="user-overview-list">
-      <li v-for="user in files">
-        <a :href="`/file/${user}`">"{{ user }}"</a>
+      <li v-for="file in files">
+
+        <div v-if="file.tombstone">
+          <p>{{ file.name }}</p>
+        </div>
+        <div v-else-if="!file.tombstone">
+          <a :href="`/file/${file.name}`">"{{ file.name }} / {{ file.group }} - {{ file.length}}"</a>
+        </div>
+
+
       </li>
     </ul>
   </app-frame>
