@@ -37,7 +37,6 @@ public class Main {
             LOG.warn("HTML location parameter was not provided, will use fallback of {}", htmlFilesLocation);
         }
 
-
         HtmlChecker checker = new HtmlChecker(htmlFilesLocation);
         FilesController filesController = new FilesController(htmlFilesLocation);
 
@@ -48,7 +47,7 @@ public class Main {
             config.useVirtualThreads = true;
             config.http.brotliAndGzipCompression(9, 11);
 //            config.staticFiles.add("/public", Location.CLASSPATH);
-//            config.staticFiles.enableWebjars();
+            config.staticFiles.enableWebjars();
 //            config.bundledPlugins.enableDevLogging();
             config.vue.vueInstanceNameInJs = "app";
         });
