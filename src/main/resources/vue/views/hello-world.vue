@@ -22,7 +22,14 @@
             </div>
           </div>
 
-          <ul class="list-group mb-4" id="documents-list">
+          <!-- Loading Spinner -->
+          <div v-if="loading" class="text-center py-5">
+            <div class="spinner-border text-primary" role="status" style="width: 4rem; height: 4rem;">
+              <span class="visually-hidden">Loading...</span>
+            </div>
+          </div>
+
+          <ul v-else class="list-group mb-4" id="documents-list">
             <li v-for="file in filteredFiles" :key="file.name"  class="list-group-item file-entry" >
 
               <div v-if="file.tombstone" class="d-flex justify-content-between align-items-center tombstone">
@@ -38,7 +45,6 @@
                   <i class="bi bi-download me-1"></i>Download
                 </a>
               </div>
-
             </li>
 
           </ul>
@@ -58,6 +64,7 @@ app.component("hello-world", {
       files: [],
       searchQuery: "",
       showTombstone: false,
+      loading: true,
     }
   },
 
@@ -87,6 +94,8 @@ app.component("hello-world", {
       this.files = await response.json();
     } catch (error) {
       console.error('Error fetching documents:', error);
+    } finally {
+      this.loading = false;  // <--- important! even if fetch fails
     }
   },
 
