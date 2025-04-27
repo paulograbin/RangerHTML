@@ -19,21 +19,31 @@
     </ul>
   </app-frame>
 </template>
+
 <script>
 app.component("hello-world", {
   template: "#hello-world",
   data: () => ({
     files: [],
   }),
+  mounted() {
+    document.onreadystatechange = () => {
+      document.getElementById('docSearch').addEventListener('input', function () {
+        const query = this.value.toLowerCase();
+        document.querySelectorAll('#documents-list .file-entry').forEach(li => {
+          const filename = li.querySelector('.filename').textContent.toLowerCase();
+          li.style.display = filename.includes(query) ? '' : 'none';
+        });
+      });
+    }
+  },
   created() {
     fetch("/api/files")
         .then(response => response.json())
         .then(json => this.files = json)
         .catch(error => alert(error))
-  }
+  },
 });
-
-
 </script>
 <style>
 .hello-world {
