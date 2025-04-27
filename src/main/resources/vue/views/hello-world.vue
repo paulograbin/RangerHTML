@@ -29,6 +29,12 @@
             </div>
           </div>
 
+          <!-- No Files Found (Empty State) -->
+          <div v-else-if="filteredFiles.length === 0" class="text-center py-5 text-muted">
+            <p>No documents found that match your search.</p>
+          </div>
+
+
           <ul v-else class="list-group mb-4" id="documents-list">
             <li v-for="file in filteredFiles" :key="file.name"  class="list-group-item file-entry" >
 
