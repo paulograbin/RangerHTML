@@ -13,21 +13,25 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.attribute.BasicFileAttributes;
-import java.nio.file.attribute.FileTime;
-import java.text.SimpleDateFormat;
 import java.util.Arrays;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 
+import static com.paulograbin.Main.SMALL_DATE_FORMAT;
+
 public class FilesController {
 
     private static final Logger LOG = LoggerFactory.getLogger(FilesController.class);
 
-    private static final SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd");
+    private final String htmlFilesLocation;
 
-    public static void getAll(@NotNull Context context) {
+    public FilesController(String htmlFilesLocation) {
+        this.htmlFilesLocation = htmlFilesLocation;
+    }
+
+    public void getAll(@NotNull Context context) {
 //        var basePath = "/home/paulograbin/Dropbox/htmlDownloads";
 //        Path path = Path.of(basePath);
 //
@@ -44,14 +48,12 @@ public class FilesController {
 //        context.json(list);
     }
 
-    public static void getMostRecentOnes(@NotNull Context context) {
-//        var basePath = "/home/paulograbin/Desktop/html";
-        var basePath = "/home/paulograbin/Dropbox/htmlDownloads/";
-        Path path = Path.of(basePath);
+    public void getMostRecentOnes(@NotNull Context context) {
+        Path path = Path.of(htmlFilesLocation);
 
         File file = path.toFile();
 
-        String formattedDate = sdf.format(new Date());
+        String formattedDate = SMALL_DATE_FORMAT.format(new Date());
 
         List<FileRecord> list = Arrays.stream(Objects.requireNonNull(file.listFiles()))
                 .filter(f -> f.getName().contains(formattedDate))
@@ -91,7 +93,7 @@ public class FilesController {
         context.json(list);
     }
 
-    public static void loadFile(@NotNull Context context) throws IOException {
+    public void loadFile(@NotNull Context context) throws IOException {
         Map<String, String> stringStringMap = context.pathParamMap();
 
         if (stringStringMap.isEmpty()) {
@@ -115,7 +117,6 @@ public class FilesController {
                 LOG.info("Found link: " + string);
             }
         }
-
 
         context.html(String.join("\n", strings));
     }
