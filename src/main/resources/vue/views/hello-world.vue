@@ -1,22 +1,40 @@
 <template id="hello-world">
-  <h1 class="hello-world">Hello, World!</h1>
-
   <a href="/api/files">Files</a>
 
   <app-frame>
-    <ul class="user-overview-list">
-      <li v-for="file in files">
+    <div class="container py-5">
+      <div class="row">
+        <div class="col-lg-10 mx-auto">
+          <h2 class="mb-4 text-center">Downloadable Files</h2>
 
-        <div v-if="file.tombstone">
-          <p>{{ file.name }}</p>
+          <!-- Search input -->
+          <div class="mb-3">
+            <input type="text" id="docSearch" class="form-control" placeholder="Search documents...">
+          </div>
+
+          <ul class="list-group mb-4" id="documents-list">
+            <li v-for="file in files" class="list-group-item file-entry">
+
+                <div v-if="file.tombstone" class="d-flex justify-content-between align-items-center">
+                  <span>
+                    <i class="bi bi-info me-2"></i>
+                    <span class="filename">{{ file.name }}</span>
+                  </span>
+                </div>
+
+                <div v-if="!file.tombstone" class="d-flex justify-content-between align-items-center">
+                  <span><i class="bi bi-file-text-fill me-2"></i><span class="filename">{{ file.name }} / {{ file.group }} - {{ file.length }}</span></span>
+                  <a :href="`/file/${file.name}`" class="btn btn-sm btn-outline-primary">
+                    <i class="bi bi-download me-1"></i>Download
+                  </a>
+                </div>
+
+            </li>
+
+          </ul>
         </div>
-        <div v-else-if="!file.tombstone">
-          <a :href="`/file/${file.name}`">"{{ file.name }} / {{ file.group }} - {{ file.length}}"</a>
-        </div>
-
-
-      </li>
-    </ul>
+      </div>
+    </div>
   </app-frame>
 </template>
 
@@ -46,7 +64,4 @@ app.component("hello-world", {
 });
 </script>
 <style>
-.hello-world {
-  color: goldenrod;
-}
 </style>
