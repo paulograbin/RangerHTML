@@ -17,7 +17,6 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.StandardOpenOption;
-import java.text.SimpleDateFormat;
 import java.time.Duration;
 import java.time.Instant;
 import java.time.LocalDateTime;
@@ -30,12 +29,18 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 
+import static com.paulograbin.Main.FULL_DATE_FORMAT;
+
 
 public class HtmlChecker implements Runnable {
 
     private static final Logger LOG = LoggerFactory.getLogger(Main.class);
 
-    private static final SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH-mm-ss-SSSS");
+    private final String directoryLocation;
+
+    public HtmlChecker(String diretoryLocation) {
+        this.directoryLocation = diretoryLocation;
+    }
 
     @Override
     public void run() {
@@ -50,18 +55,10 @@ public class HtmlChecker implements Runnable {
         LOG.info("Waking up at {}", LocalDateTime.now());
 
         Instant now = Instant.now();
-
-        var basePath = "";
-
-//        final var homeDirectoryForCurrentUser = System.getProperty("user.home");
-//        basePath = homeDirectoryForCurrentUser + "/Desktop/html";
-
-        basePath = "/home/paulograbin/Dropbox/htmlDownloads/";
-
-        Path path = Paths.get(basePath);
+        Path path = Paths.get(directoryLocation);
 
         if (!path.toFile().exists() || !path.toFile().isDirectory()) {
-            System.err.println("Path " + basePath + " does not exist or is not a directory, removing it and creating location...");
+            System.err.println("Path " + path + " does not exist or is not a directory, removing it and creating location...");
             path.toFile().delete();
             path.toFile().mkdir();
         }
@@ -81,7 +78,6 @@ public class HtmlChecker implements Runnable {
         var randomString = RandomStringUtils.secure().nextAlphanumeric(5);
 
         for (String podName : servers) {
-            String finalBasePath = basePath;
             executorService.submit(() -> {
                 try {
                     HttpClient client = HttpClient.newHttpClient();
@@ -110,8 +106,8 @@ public class HtmlChecker implements Runnable {
                         System.out.println("Calling " + podName + " but got " + routeCookie);
                     }
 
-                    var file = saveHtmlToDisk(finalBasePath, routeCookie, response.body(), randomString);
-                    filterFileContent(file);
+                    var file = saveHtmlToDisk(directoryLocation, routeCookie, response.body(), randomString);
+//                    filterFileContent(file);
 
                     downloadedFiles.add(file.toFile());
                 } catch (IOException | InterruptedException e) {
@@ -205,11 +201,12 @@ public class HtmlChecker implements Runnable {
             System.out.println(newName);
             var tombStoneFile = new File(basePath + "/tombstone " + newName);
             tombStoneFile.createNewFile();
+            LOG.info("Tombstone file created");
         }
     }
 
     private static Path saveHtmlToDisk(String basePath, String server, String content, String randomString) throws IOException {
-        String formattedDate = sdf.format(new Date());
+        String formattedDate = FULL_DATE_FORMAT.format(new Date());
 
         int i = server.lastIndexOf("-");
         server = server.substring(i + 1);
