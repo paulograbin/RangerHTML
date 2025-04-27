@@ -5,37 +5,15 @@ import com.paulograbin.web.FilesController;
 import io.javalin.Javalin;
 import io.javalin.event.HandlerMetaInfo;
 import io.javalin.event.LifecycleEventListener;
-import io.javalin.http.staticfiles.Location;
 import io.javalin.vue.VueComponent;
-import org.apache.commons.lang3.RandomStringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileNotFoundException;
-import java.io.FileWriter;
 import java.io.IOException;
 import java.io.RandomAccessFile;
-import java.net.Inet4Address;
-import java.net.URI;
-import java.net.http.HttpClient;
-import java.net.http.HttpRequest;
-import java.net.http.HttpResponse;
-import java.nio.charset.StandardCharsets;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
-import java.nio.file.StandardOpenOption;
 import java.text.SimpleDateFormat;
-import java.time.Duration;
-import java.time.Instant;
-import java.util.ArrayList;
-import java.util.Date;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
-import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
@@ -45,9 +23,26 @@ public class Main {
 
     private static final Logger LOG = LoggerFactory.getLogger(Main.class);
 
-    public static void main(String[] args) throws InterruptedException, IOException {
+    public static final SimpleDateFormat FULL_DATE_FORMAT = new SimpleDateFormat("yyyy-MM-dd HH-mm-ss-SSSS");
+    public static final SimpleDateFormat SMALL_DATE_FORMAT = new SimpleDateFormat("yyyy-MM-dd");
+
+
+    public static void main(String[] args) {
+        String htmlFilesLocation = "";
+
+        if (args.length == 0) {
+            final var homeDirectoryForCurrentUser = System.getProperty("user.home");
+            htmlFilesLocation = homeDirectoryForCurrentUser + "/Desktop/html";
+
+            LOG.warn("HTML location parameter was not provided, will use fallback of {}", htmlFilesLocation);
+        }
+
+
+        HtmlChecker checker = new HtmlChecker(htmlFilesLocation);
+        FilesController filesController = new FilesController(htmlFilesLocation);
+
         ScheduledExecutorService executorService = Executors.newScheduledThreadPool(1);
-        executorService.scheduleAtFixedRate(new HtmlChecker(), 0, 5, TimeUnit.MINUTES);
+        executorService.scheduleAtFixedRate(checker, 0, 5, TimeUnit.MINUTES);
 
         var app = Javalin.create(config -> {
             config.useVirtualThreads = true;
@@ -65,11 +60,10 @@ public class Main {
         app.events(event -> event.handlerAdded(bb));
 
         app.get("/", new VueComponent("hello-world"));
-        app.get("/file/{fileName}", FilesController::loadFile);
+        app.get("/file/{fileName}", filesController::loadFile);
+        app.get("/api/files", filesController::getAll);
+
         app.get("/_ui/*", ExternalAssetController::get);
-        app.get("/api/files", FilesController::getAll);
-
-
         app.get("/_s/login-status", FakeController::getLogin);
         app.get("/cart/miniCartUpdate", FakeController::getMiniCart);
         app.get("/globalecountry/info", FakeController::getInfo);
