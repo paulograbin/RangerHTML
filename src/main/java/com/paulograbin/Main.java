@@ -210,7 +210,7 @@ public class Main {
 
             // Print the final result
             if (!filesAreEqual) {
-                System.out.println(diff.toString());
+                System.out.println(diff);
             } else {
                 System.out.println("Files are identical.");
             }
