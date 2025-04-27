@@ -107,7 +107,7 @@ public class HtmlChecker implements Runnable {
                     }
 
                     var file = saveHtmlToDisk(directoryLocation, routeCookie, response.body(), randomString);
-//                    filterFileContent(file);
+                    filterFileContent(file);
 
                     downloadedFiles.add(file.toFile());
                 } catch (IOException | InterruptedException e) {
