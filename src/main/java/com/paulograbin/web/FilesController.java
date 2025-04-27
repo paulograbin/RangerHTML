@@ -103,7 +103,7 @@ public class FilesController {
 
         String s = stringStringMap.get("fileName");
 
-        var filePath = "/home/paulograbin/Desktop/html/" + s;
+        var filePath = htmlFilesLocation + "/" + s;
 
         File file = new File(filePath);
 
@@ -111,12 +111,6 @@ public class FilesController {
         boolean b = file.canRead();
 
         List<String> strings = Files.readAllLines(file.toPath(), StandardCharsets.UTF_8);
-
-        for (String string : strings) {
-            if (strings.contains("<link rel=")) {
-                LOG.info("Found link: " + string);
-            }
-        }
 
         context.html(String.join("\n", strings));
     }
