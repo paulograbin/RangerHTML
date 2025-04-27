@@ -31,24 +31,8 @@ public class FilesController {
         this.htmlFilesLocation = htmlFilesLocation;
     }
 
-    public void getAll(@NotNull Context context) {
-//        var basePath = "/home/paulograbin/Dropbox/htmlDownloads";
-//        Path path = Path.of(basePath);
-//
-//        File file = path.toFile();
-//
-//        List<String> list = Arrays.stream(Objects.requireNonNull(file.listFiles()))
-//                .map(File::getName)
-//                .sorted()
-//                .toList();
-//
 
-        getMostRecentOnes(context);
-
-//        context.json(list);
-    }
-
-    public void getMostRecentOnes(@NotNull Context context) {
+    public void loadAllFiles(@NotNull Context context) {
         Path path = Path.of(htmlFilesLocation);
 
         File file = path.toFile();
@@ -56,7 +40,6 @@ public class FilesController {
         String formattedDate = SMALL_DATE_FORMAT.format(new Date());
 
         List<FileRecord> list = Arrays.stream(Objects.requireNonNull(file.listFiles()))
-                .filter(f -> f.getName().contains(formattedDate))
                 .map(f -> {
 
                     String creationTime = "";

@@ -60,7 +60,7 @@ public class Main {
 
         app.get("/", new VueComponent("hello-world"));
         app.get("/file/{fileName}", filesController::loadFile);
-        app.get("/api/files", filesController::getAll);
+        app.get("/api/files", filesController::loadAllFiles);
 
         app.get("/_ui/*", ExternalAssetController::get);
         app.get("/_s/login-status", FakeController::getLogin);
