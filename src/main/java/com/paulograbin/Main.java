@@ -50,8 +50,10 @@ public class Main {
         executorService.scheduleAtFixedRate(new HtmlChecker(), 0, 5, TimeUnit.MINUTES);
 
         var app = Javalin.create(config -> {
-            config.staticFiles.add("/public", Location.CLASSPATH);
-            config.staticFiles.enableWebjars();
+            config.useVirtualThreads = true;
+            config.http.brotliAndGzipCompression(9, 11);
+//            config.staticFiles.add("/public", Location.CLASSPATH);
+//            config.staticFiles.enableWebjars();
 //            config.bundledPlugins.enableDevLogging();
             config.vue.vueInstanceNameInJs = "app";
         });
