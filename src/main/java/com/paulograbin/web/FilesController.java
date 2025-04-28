@@ -1,7 +1,6 @@
 package com.paulograbin.web;
 
 import com.paulograbin.FileRecord;
-import com.paulograbin.Main;
 import io.javalin.http.Context;
 import io.javalin.http.HttpStatus;
 import org.jetbrains.annotations.NotNull;
@@ -13,10 +12,10 @@ import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.nio.file.attribute.BasicFileAttributes;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.Arrays;
+import java.util.Comparator;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
@@ -40,51 +39,41 @@ public class FilesController {
 
         File file = path.toFile();
 
-        String formattedDate = SMALL_DATE_FORMAT.format(new Date());
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH-mm-ss-SSSS");
         DateTimeFormatter redableFromater = DateTimeFormatter.ofPattern("yyyy/MM/dd HH:mm:ss");
 
         List<FileRecord> list = Arrays.stream(Objects.requireNonNull(file.listFiles()))
+                .filter(f -> f.getName().endsWith(".html") || f.getName().startsWith("tombstone"))
                 .map(f -> {
-
-                    String creationTime = "";
-                    String lastAccessTime = "";
-                    String lastModifiedTime = "";
-
-                    try {
-                        BasicFileAttributes atributes = Files.readAttributes(f.toPath(), BasicFileAttributes.class);
-
-                        creationTime = atributes.creationTime().toString();
-                        lastAccessTime = atributes.lastAccessTime().toString();
-                        lastModifiedTime = atributes.lastModifiedTime().toString();
-
-                    } catch (IOException e) {
-                        LOG.warn("Could not read attributes for file {}", f.getName(), e);
-                    }
-
                     var groupKey = "";
 
-                    int i = f.getName().indexOf("@");
-                    int i1 = f.getName().lastIndexOf("@");
+                    int firstAtChar = f.getName().indexOf("@");
+                    int secondAtChar = f.getName().lastIndexOf("@");
 
                     var tombstone = true;
 
-                    if (i != -1 && i1 != -1) {
-                        groupKey = f.getName().substring(i + 1, i1).trim();
+                    if (firstAtChar != -1 && secondAtChar != -1) {
+                        groupKey = f.getName().substring(firstAtChar + 1, secondAtChar).trim();
                         tombstone = false;
                     }
 
-                    String date = "";
+                    String creationDateString;
+                    LocalDateTime creationDate;
 
-                    if (i != -1) {
-                        date = f.getName().substring(0, i).trim();
-                        LocalDateTime dateTime = LocalDateTime.parse(date, formatter);
-
-                        date = redableFromater.format(dateTime);
+                    if (firstAtChar != -1) {
+                        creationDateString = f.getName().substring(0, firstAtChar).trim();
+                        creationDate = LocalDateTime.parse(creationDateString, formatter);
+                        creationDateString = redableFromater.format(creationDate);
+                    } else {
+                        int dateStartingChar = f.getName().indexOf(" ");
+                        String substring = f.getName().substring(dateStartingChar).trim();
+                        creationDate = LocalDateTime.parse(substring, formatter);
+                        creationDateString = redableFromater.format(creationDate);
                     }
 
-                    return new FileRecord(f.getName(), f.length(), groupKey, tombstone, date, creationTime, lastModifiedTime, lastAccessTime);
+                    return new FileRecord(f.getName(), f.length(), groupKey, tombstone, creationDateString, creationDate);
                 })
+                .sorted(Comparator.comparing(FileRecord::creationTime).reversed())
                 .toList();
 
         context.json(list);
