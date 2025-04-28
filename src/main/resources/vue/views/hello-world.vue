@@ -55,7 +55,7 @@
               <div v-if="file.tombstone" class="d-flex justify-content-between align-items-center tombstone">
                   <span>
                     <i class="bi bi-info me-2"></i>
-                    <span class="filename" v-html="file.name"></span>
+                    <span class="filename" v-html="file.creationDate"></span>
                   </span>
               </div>
 
