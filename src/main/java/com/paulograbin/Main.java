@@ -41,7 +41,7 @@ public class Main {
         FilesController filesController = new FilesController(htmlFilesLocation);
 
         ScheduledExecutorService executorService = Executors.newScheduledThreadPool(1);
-        executorService.scheduleAtFixedRate(checker, 0, 5, TimeUnit.MINUTES);
+        executorService.scheduleAtFixedRate(checker, 0, 1, TimeUnit.MINUTES);
 
         var app = Javalin.create(config -> {
             config.useVirtualThreads = true;
