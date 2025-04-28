@@ -23,6 +23,16 @@
             </div>
           </div>
 
+          <!-- Checkbox for tombstone toggle -->
+          <div class="col-md-4 d-flex align-items-center">
+            <div class="form-check ms-3">
+              <input class="form-check-input" type="checkbox" id="recentFilesOnly" v-model="recentFilesOnly">
+              <label class="form-check-label" for="recentFilesOnly">
+                Recent files only
+              </label>
+            </div>
+          </div>
+
           <!-- Loading Spinner -->
           <div v-if="loading" class="text-center py-5">
             <div class="spinner-border text-primary" role="status" style="width: 4rem; height: 4rem;">
@@ -76,6 +86,7 @@ app.component("hello-world", {
       files: [],
       searchQuery: "",
       showTombstone: false,
+      recentFilesOnly: false,
       loading: true,
     }
   },
