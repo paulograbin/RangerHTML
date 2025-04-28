@@ -1,6 +1,7 @@
 package com.paulograbin.web;
 
 import com.paulograbin.FileRecord;
+import com.paulograbin.Main;
 import io.javalin.http.Context;
 import io.javalin.http.HttpStatus;
 import org.jetbrains.annotations.NotNull;
@@ -13,6 +14,8 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.attribute.BasicFileAttributes;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.Arrays;
 import java.util.Date;
 import java.util.List;
@@ -38,6 +41,8 @@ public class FilesController {
         File file = path.toFile();
 
         String formattedDate = SMALL_DATE_FORMAT.format(new Date());
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH-mm-ss-SSSS");
+        DateTimeFormatter redableFromater = DateTimeFormatter.ofPattern("yyyy/MM/dd HH:mm:ss");
 
         List<FileRecord> list = Arrays.stream(Objects.requireNonNull(file.listFiles()))
                 .map(f -> {
@@ -69,7 +74,16 @@ public class FilesController {
                         tombstone = false;
                     }
 
-                    return new FileRecord(f.getName(), f.length(), groupKey, tombstone, creationTime, lastModifiedTime, lastAccessTime);
+                    String date = "";
+
+                    if (i != -1) {
+                        date = f.getName().substring(0, i).trim();
+                        LocalDateTime dateTime = LocalDateTime.parse(date, formatter);
+
+                        date = redableFromater.format(dateTime);
+                    }
+
+                    return new FileRecord(f.getName(), f.length(), groupKey, tombstone, date, creationTime, lastModifiedTime, lastAccessTime);
                 })
                 .toList();
 
