@@ -14,15 +14,13 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
+import java.time.format.DateTimeParseException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Comparator;
-import java.util.Date;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
-
-import static com.paulograbin.Main.SMALL_DATE_FORMAT;
 
 public class FilesController {
 
@@ -47,20 +45,21 @@ public class FilesController {
         List<FileRecord> list = Arrays.stream(Objects.requireNonNull(file.listFiles()))
                 .filter(f -> f.getName().endsWith(".html") || f.getName().startsWith("tombstone"))
                 .map(f -> {
-                    var groupKey = "";
+                    try {
+                        var groupKey = "";
 
-                    int firstAtChar = f.getName().indexOf("@");
-                    int secondAtChar = f.getName().lastIndexOf("@");
+                        int firstAtChar = f.getName().indexOf("@");
+                        int secondAtChar = f.getName().lastIndexOf("@");
 
-                    var tombstone = true;
+                        var tombstone = true;
 
                         if (firstAtChar != -1 && secondAtChar != -1 && firstAtChar != secondAtChar) {
                             groupKey = f.getName().substring(firstAtChar + 1, secondAtChar).trim();
                             tombstone = false;
                         }
 
-                    String creationDateString;
-                    LocalDateTime creationDate;
+                        String creationDateString;
+                        LocalDateTime creationDate;
 
                         if (firstAtChar != -1) {
                             try {
@@ -85,7 +84,7 @@ public class FilesController {
                         LOG.error("Error on file {}", f.getName(), e);
                     }
 
-                    return new FileRecord(f.getName(), f.length(), groupKey, tombstone, creationDateString, "", "", creationDate);
+                    return null;
                 })
                 .sorted(Comparator.comparing(FileRecord::creationTime).reversed())
                 .toList();
@@ -98,7 +97,7 @@ public class FilesController {
     private List<FileRecord> foldTombstoneFiles(List<FileRecord> list) {
         List<FileRecord> newList = new ArrayList<>(list.size());
 
-        for (int i = 0; i < list.size()-1; i++) {
+        for (int i = 0; i < list.size() - 1; i++) {
             FileRecord current = list.get(i);
             FileRecord next = null;
 
@@ -114,10 +113,9 @@ public class FilesController {
             }
 
             if (next != null) {
-                 FileRecord fileRecord = new FileRecord("from " + next.name() + " to " + current.name(), 0, "", true, current.creationDate(), current.creationDate(), next.creationDate(), current.creationTime());
+                FileRecord fileRecord = new FileRecord("from " + next.name() + " to " + current.name(), 0, "", true, current.creationDate(), next.creationDate(), current.creationDate(), current.creationTime());
 
                 newList.add(fileRecord);
-                i++;
             } else {
                 newList.add(current);
             }
@@ -136,13 +134,8 @@ public class FilesController {
         }
 
         String s = stringStringMap.get("fileName");
-
         var filePath = htmlFilesLocation + "/" + s;
-
         File file = new File(filePath);
-
-        boolean exists = file.exists();
-        boolean b = file.canRead();
 
         List<String> strings = Files.readAllLines(file.toPath(), StandardCharsets.UTF_8);
 
