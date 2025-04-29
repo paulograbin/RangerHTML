@@ -54,23 +54,14 @@ public class FilesController {
 
                     var tombstone = true;
 
-                    if (firstAtChar != -1 && secondAtChar != -1) {
-                        groupKey = f.getName().substring(firstAtChar + 1, secondAtChar).trim();
-                        tombstone = false;
-                    }
+                        if (firstAtChar != -1 && secondAtChar != -1 && firstAtChar != secondAtChar) {
+                            groupKey = f.getName().substring(firstAtChar + 1, secondAtChar).trim();
+                            tombstone = false;
+                        }
 
                     String creationDateString;
                     LocalDateTime creationDate;
 
-                    if (firstAtChar != -1) {
-                        creationDateString = f.getName().substring(0, firstAtChar).trim();
-                        creationDate = LocalDateTime.parse(creationDateString, formatter);
-                        creationDateString = redableFromater.format(creationDate);
-                    } else {
-                        int dateStartingChar = f.getName().indexOf(" ");
-                        String substring = f.getName().substring(dateStartingChar).trim();
-                        creationDate = LocalDateTime.parse(substring, formatter);
-                        creationDateString = redableFromater.format(creationDate);
                         if (firstAtChar != -1) {
                             try {
                                 creationDateString = f.getName().substring(0, firstAtChar).trim();
@@ -89,6 +80,9 @@ public class FilesController {
                             creationDateString = redableFromater.format(creationDate);
                         }
 
+                        return new FileRecord(f.getName(), f.length(), groupKey, tombstone, creationDateString, "", "", creationDate);
+                    } catch (RuntimeException e) {
+                        LOG.error("Error on file {}", f.getName(), e);
                     }
 
                     return new FileRecord(f.getName(), f.length(), groupKey, tombstone, creationDateString, "", "", creationDate);
