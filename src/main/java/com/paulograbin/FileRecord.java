@@ -5,5 +5,7 @@ public record FileRecord(String name,
                          String group,
                          boolean tombstone,
                          String creationDate,
+                         String start,
+                         String end,
                          java.time.LocalDateTime creationTime) {
 }

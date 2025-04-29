@@ -48,14 +48,13 @@
             <p>Oops, <span>no documents found</span> that match your search.</p>
           </div>
 
-
           <ul v-else class="list-group mb-4" id="documents-list">
             <li v-for="file in filteredFiles" :key="file.name" class="list-group-item file-entry">
 
               <div v-if="file.tombstone" class="d-flex justify-content-between align-items-center tombstone">
                   <span>
                     <i class="bi bi-info me-2"></i>
-                    <span class="filename" v-html="file.creationDate"></span>
+                    <span class="filename"> {{ file.start }} to {{ file.end }}</span>
                   </span>
               </div>
 
