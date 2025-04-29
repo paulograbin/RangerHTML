@@ -73,10 +73,18 @@ public class FilesController {
                                 creationDateString = redableFromater.format(creationDate);
                             }
                         } else {
-                            int dateStartingChar = f.getName().indexOf(" ");
-                            String substring = f.getName().substring(dateStartingChar).trim();
-                            creationDate = LocalDateTime.parse(substring, formatter);
-                            creationDateString = redableFromater.format(creationDate);
+                            try {
+                                int dateStartingChar = f.getName().indexOf(" ");
+                                String substring = f.getName().substring(dateStartingChar).trim();
+                                creationDate = LocalDateTime.parse(substring, formatter);
+                                creationDateString = redableFromater.format(creationDate);
+                            } catch (DateTimeParseException e) {
+                                int dateStartingChar = f.getName().indexOf(" ");
+                                String substring = f.getName().substring(dateStartingChar).trim();
+
+                                creationDate = LocalDateTime.parse(substring, oldFormatter);
+                                creationDateString = redableFromater.format(creationDate);
+                            }
                         }
 
                         return new FileRecord(f.getName(), f.length(), groupKey, tombstone, creationDateString, "", "", creationDate);
