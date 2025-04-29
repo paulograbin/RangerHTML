@@ -104,6 +104,12 @@ app.component("hello-world", {
 
   mounted() {
     console.log('mounted');
+
+    if (localStorage.showTombstone === 'true') {
+      this.showTombstone = true;
+    } else {
+      this.showTombstone = false;
+    }
   },
 
   async created() {
@@ -123,6 +129,7 @@ app.component("hello-world", {
 
   watch: {
     showTombstone(newValue) {
+      localStorage.showTombstone = newValue;
       console.log('Show tombstone changed:', newValue);
     }
   }
