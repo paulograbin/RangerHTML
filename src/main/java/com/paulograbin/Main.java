@@ -45,7 +45,7 @@ public class Main {
 
         var app = Javalin.create(config -> {
             config.useVirtualThreads = true;
-            config.http.brotliAndGzipCompression(9, 11);
+            config.http.gzipOnlyCompression();
 //            config.staticFiles.add("/public", Location.CLASSPATH);
             config.staticFiles.enableWebjars();
 //            config.bundledPlugins.enableDevLogging();
