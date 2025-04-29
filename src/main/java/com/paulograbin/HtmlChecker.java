@@ -197,6 +197,7 @@ public class HtmlChecker implements Runnable {
 
             int i = name.indexOf("@");
             var newName = name.substring(0, i);
+            newName = newName.trim();
 
             System.out.println(newName);
             var tombStoneFile = new File(basePath + "/tombstone " + newName);
