@@ -41,6 +41,7 @@ public class FilesController {
         File file = path.toFile();
 
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH-mm-ss-SSSS");
+        DateTimeFormatter oldFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH-mm-ss.SSSS");
         DateTimeFormatter redableFromater = DateTimeFormatter.ofPattern("yyyy/MM/dd HH:mm:ss");
 
         List<FileRecord> list = Arrays.stream(Objects.requireNonNull(file.listFiles()))
@@ -70,6 +71,24 @@ public class FilesController {
                         String substring = f.getName().substring(dateStartingChar).trim();
                         creationDate = LocalDateTime.parse(substring, formatter);
                         creationDateString = redableFromater.format(creationDate);
+                        if (firstAtChar != -1) {
+                            try {
+                                creationDateString = f.getName().substring(0, firstAtChar).trim();
+                                creationDate = LocalDateTime.parse(creationDateString, formatter);
+                                creationDateString = redableFromater.format(creationDate);
+
+                            } catch (DateTimeParseException e) {
+                                creationDateString = f.getName().substring(0, firstAtChar).trim();
+                                creationDate = LocalDateTime.parse(creationDateString, oldFormatter);
+                                creationDateString = redableFromater.format(creationDate);
+                            }
+                        } else {
+                            int dateStartingChar = f.getName().indexOf(" ");
+                            String substring = f.getName().substring(dateStartingChar).trim();
+                            creationDate = LocalDateTime.parse(substring, formatter);
+                            creationDateString = redableFromater.format(creationDate);
+                        }
+
                     }
 
                     return new FileRecord(f.getName(), f.length(), groupKey, tombstone, creationDateString, "", "", creationDate);
