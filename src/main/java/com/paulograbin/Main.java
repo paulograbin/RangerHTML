@@ -59,6 +59,7 @@ public class Main {
         app.events(event -> event.handlerAdded(bb));
 
         app.get("/", new VueComponent("hello-world"));
+        app.get("/pdp", new VueComponent("pdp"));
         app.get("/file/{fileName}", filesController::loadFile);
         app.get("/api/files", filesController::loadAllFiles);
 
