@@ -42,6 +42,8 @@ public class FilesController {
         DateTimeFormatter oldFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH-mm-ss.SSSS");
         DateTimeFormatter redableFromater = DateTimeFormatter.ofPattern("yyyy/MM/dd HH:mm:ss");
 
+        preProcessFiles(file.listFiles());
+
         List<FileRecord> list = Arrays.stream(Objects.requireNonNull(file.listFiles()))
                 .filter(f -> f.getName().endsWith(".html") || f.getName().startsWith("tombstone"))
                 .map(f -> {
@@ -100,6 +102,22 @@ public class FilesController {
         list = foldTombstoneFiles(list);
 
         context.json(list);
+    }
+
+    private void preProcessFiles(File[] files) {
+        for (File file : files) {
+            if (file.getName().contains(":")) {
+                file.renameTo(new File(file.getParent() + "/" + file.getName().replace(":", "-")));
+            }
+
+            if (file.getName().startsWith("tombstone") && file.getName().contains("@")) {
+                file.renameTo(new File(file.getParent() + "/" + file.getName().replace("@", "")));
+            }
+
+            if (file.getName().startsWith("tombstone") && file.getName().endsWith(".html")) {
+                file.renameTo(new File(file.getParent() + "/" + file.getName().replace(".html", "")));
+            }
+        }
     }
 
     private List<FileRecord> foldTombstoneFiles(List<FileRecord> list) {
