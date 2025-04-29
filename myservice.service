@@ -1,7 +1,13 @@
 [Unit]
-Description=Service to download the html changes
+Description=A tool to hit every storefront node, then download and compare the HTML sent from the server
+After=syslog.target network.target
 
 [Service]
 Type=oneshot
 ExecStart=/opt/htmlDownloader/service.sh
+SuccessExitStatus=143
 User=paulograbin
+
+Type=simple
+
+ExecStop=/bin/kill -15 $MAINPID
