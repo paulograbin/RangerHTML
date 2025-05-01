@@ -22,8 +22,10 @@ import java.time.Instant;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -157,20 +159,29 @@ public class HtmlChecker implements Runnable {
             return;
         }
 
-        long standardLength = downloadedFiles.getFirst().length();
-        short deviationCount = 0;
-
+        Map<Long, Integer> sizeMap = new HashMap<>(downloadedFiles.size());
         for (File file : downloadedFiles) {
             long fileSize = file.length();
 
-            if (fileSize != standardLength) {
-                deviationCount++;
-            }
+            sizeMap.put(fileSize, sizeMap.getOrDefault(fileSize, 0) + 1);
 
-            System.out.println("File " + file.getName() + " has size: " + fileSize);
+            LOG.info("File " + file.getName() + " has size: " + fileSize);
         }
 
-        System.out.println("Deviation count " + deviationCount);
+        int deviationCount = 0;
+        LOG.info("Deviation count " + deviationCount);
+
+        var list = sizeMap.keySet().stream().toList();
+        if (list.size() > 1) {
+            var i = list.get(0);
+            var j = list.get(1);
+
+            var result = Math.abs(i - j);
+
+            if (result > 10) {
+                deviationCount = list.size();
+            }
+        }
 
         if (deviationCount > 0) {
             HttpClient client = HttpClient.newHttpClient();
@@ -202,7 +213,6 @@ public class HtmlChecker implements Runnable {
             var newName = name.substring(0, i);
             newName = newName.trim();
 
-            System.out.println(newName);
             var tombStoneFile = new File(basePath + "/tombstone " + newName);
             tombStoneFile.createNewFile();
             LOG.info("Tombstone file created");
