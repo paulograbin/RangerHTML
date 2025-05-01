@@ -64,11 +64,11 @@ public class HtmlChecker implements Runnable {
         }
 
         var servers = List.of(
-                ".accstorefront-ff7d58c9c-5mr9t",
-                ".accstorefront-ff7d58c9c-6tnlf",
-                ".accstorefront-ff7d58c9c-k468c",
-                ".accstorefront-ff7d58c9c-ktq48",
-                ".accstorefront-ff7d58c9c-nszx9"
+                ".accstorefront-6964cbc65d-h5mf6",
+                ".accstorefront-6964cbc65d-gq8h9",
+                ".accstorefront-6964cbc65d-8xq2l",
+                ".accstorefront-6964cbc65d-m8hxm",
+                ".accstorefront-6964cbc65d-xnmh5"
         );
 
         Set<String> actualServers = new HashSet<>(5);
