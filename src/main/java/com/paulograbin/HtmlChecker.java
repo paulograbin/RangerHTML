@@ -101,9 +101,8 @@ public class HtmlChecker implements Runnable {
                     actualServers.add(routeCookie);
 
                     if (podName.equalsIgnoreCase(routeCookie)) {
-                        System.out.println("Calling " + podName + " and got same");
                     } else {
-                        System.out.println("Calling " + podName + " but got " + routeCookie);
+                        LOG.info("I called {} but got {}", podName, routeCookie);
                     }
 
                     var file = saveHtmlToDisk(directoryLocation, routeCookie, response.body(), randomString);
@@ -111,7 +110,7 @@ public class HtmlChecker implements Runnable {
 
                     downloadedFiles.add(file.toFile());
                 } catch (IOException | InterruptedException e) {
-                    System.err.println("Could not download the file: " + e.getMessage() + ", because " + e.getCause());
+                    LOG.error("Could not download the file: " + e.getMessage() + ", because " + e.getCause());
                 }
             });
         }
@@ -121,16 +120,16 @@ public class HtmlChecker implements Runnable {
 
         postDownloadChecks(downloadedFiles);
 
-        System.out.println("Actual servers:");
+        LOG.info("Actual servers:");
         for (String actual : actualServers) {
-            System.out.println(actual);
+            LOG.info("Actual server {}", actual);
         }
 
 //        var result = compareFiles(file1, file2);
 //        System.out.println("Result : " + result);
 
         long millis1 = Duration.between(now, Instant.now()).toMillis();
-        System.out.println("Runtime " + millis1 + " ms");
+        LOG.info("Runtime {} ms ", millis1);
     }
 
     private static void filterFileContent(Path file) throws IOException {
@@ -183,7 +182,7 @@ public class HtmlChecker implements Runnable {
             try {
                 HttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString());
 
-                System.out.println("Go response: " + response.statusCode());
+                LOG.info("Response from ntfy: {}", response.statusCode());
             } catch (IOException | InterruptedException e) {
                 throw new RuntimeException(e);
             }
