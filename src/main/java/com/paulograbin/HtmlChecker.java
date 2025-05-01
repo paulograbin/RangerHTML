@@ -191,7 +191,11 @@ public class HtmlChecker implements Runnable {
             var basePath = downloadedFiles.getFirst().getParent();
 
             for (File downloadedFile : downloadedFiles) {
-                downloadedFile.delete();
+                boolean delete = downloadedFile.delete();
+
+                if (!delete) {
+                    LOG.error("Could not delete file " + downloadedFile.getName());
+                }
             }
 
             int i = name.indexOf("@");
