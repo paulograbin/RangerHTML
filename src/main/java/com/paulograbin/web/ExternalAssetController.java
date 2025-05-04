@@ -46,7 +46,6 @@ public class ExternalAssetController {
         headers.firstValue("status").ifPresent(contentType -> context.header("proxyResponse", contentType));
         headers.firstValue(":status").ifPresent(contentType -> context.header("proxyResponse", contentType));
 
-
         context.result(response.body());
         LOG.info("Processing request to {} status {}", context.path(), response.statusCode());
     }

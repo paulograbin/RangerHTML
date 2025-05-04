@@ -26,6 +26,11 @@ public class FilesController {
 
     private static final Logger LOG = LoggerFactory.getLogger(FilesController.class);
 
+    private static final String EMPTY = "";
+    private static final String EMPTY_GROUP_KEY = EMPTY;
+    private static final String EMPTY_SERVER_KEY = EMPTY;
+    private static final boolean TOMBSTONE = Boolean.TRUE;
+
     private final String htmlFilesLocation;
 
     public FilesController(String htmlFilesLocation) {
@@ -48,22 +53,22 @@ public class FilesController {
                 .filter(f -> f.getName().endsWith(".html") || f.getName().startsWith("tombstone"))
                 .map(f -> {
                     try {
-                        var groupKey = "";
+                        if (f.getName().endsWith(".html")) {
+                            int firstAtChar = f.getName().indexOf("@");
+                            int secondAtChar = f.getName().lastIndexOf("@");
+                            var groupKey = "";
 
-                        int firstAtChar = f.getName().indexOf("@");
-                        int secondAtChar = f.getName().lastIndexOf("@");
+                            if (firstAtChar != -1 && secondAtChar != -1 && firstAtChar != secondAtChar) {
+                                groupKey = f.getName().substring(firstAtChar + 1, secondAtChar).trim();
+                            }
 
-                        var tombstone = true;
+                            String creationDateString;
+                            LocalDateTime creationDate;
 
-                        if (firstAtChar != -1 && secondAtChar != -1 && firstAtChar != secondAtChar) {
-                            groupKey = f.getName().substring(firstAtChar + 1, secondAtChar).trim();
-                            tombstone = false;
-                        }
+                            if (firstAtChar != -1 && secondAtChar != -1 && firstAtChar != secondAtChar) {
+                                groupKey = f.getName().substring(firstAtChar + 1, secondAtChar).trim();
+                            }
 
-                        String creationDateString;
-                        LocalDateTime creationDate;
-
-                        if (firstAtChar != -1) {
                             try {
                                 creationDateString = f.getName().substring(0, firstAtChar).trim();
                                 creationDate = LocalDateTime.parse(creationDateString, formatter);
@@ -74,7 +79,12 @@ public class FilesController {
                                 creationDate = LocalDateTime.parse(creationDateString, oldFormatter);
                                 creationDateString = redableFromater.format(creationDate);
                             }
+                            return new FileRecord(f.getName(), f.length(), groupKey, "", false, creationDateString, "", "", creationDate);
                         } else {
+
+                            String creationDateString;
+                            LocalDateTime creationDate;
+
                             try {
                                 int dateStartingChar = f.getName().indexOf(" ");
                                 String substring = f.getName().substring(dateStartingChar).trim();
@@ -87,9 +97,9 @@ public class FilesController {
                                 creationDate = LocalDateTime.parse(substring, oldFormatter);
                                 creationDateString = redableFromater.format(creationDate);
                             }
-                        }
 
-                        return new FileRecord(f.getName(), f.length(), groupKey, tombstone, creationDateString, "", "", creationDate);
+                            return new FileRecord("", 0, EMPTY_GROUP_KEY, EMPTY_SERVER_KEY, TOMBSTONE, creationDateString, "", "", creationDate);
+                        }
                     } catch (RuntimeException e) {
                         LOG.error("Error on file {}", f.getName(), e);
                     }
@@ -139,7 +149,7 @@ public class FilesController {
             }
 
             if (next != null) {
-                FileRecord fileRecord = new FileRecord("from " + next.name() + " to " + current.name(), 0, "", true, current.creationDate(), next.creationDate(), current.creationDate(), current.creationTime());
+                FileRecord fileRecord = new FileRecord("from " + next.name() + " to " + current.name(), 0, "", "", true, current.creationDate(), next.creationDate(), current.creationDate(), current.creationTime());
 
                 newList.add(fileRecord);
             } else {
