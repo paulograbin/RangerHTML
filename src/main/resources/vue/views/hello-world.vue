@@ -4,6 +4,9 @@
   <app-frame>
     <div class="container py-5">
       <div class="row">
+
+        <canvas id="eventTimeChart" width="600" height="300"></canvas>
+
         <div class="col-lg-10 mx-auto">
           <h2 class="mb-4 text-center">Downloadable Files</h2>
 
@@ -60,7 +63,7 @@
 
               <div v-if="!file.tombstone" class="d-flex justify-content-between align-items-center">
                 <span><i class="bi bi-file-text-fill me-2"></i>
-                  <span class="filename" v-html="file.creationDate"></span> / {{ file.group }} - {{ file.length }}
+                  <span class="filename"></span>{{ file.creationDate }} / {{ file.group }} - {{ file.length }}
                 </span>
                 <a :href="`/file/${file.name}`" class="btn btn-sm btn-outline-primary">
                   <i class="bi bi-download me-1"></i>Download
@@ -102,8 +105,77 @@ app.component("hello-world", {
     }
   },
 
-  mounted() {
+  async mounted() {
     console.log('mounted');
+
+    try {
+      const response = await fetch('/api/files');
+      if (!response.ok) throw new Error('Failed to fetch documents.');
+
+      this.files = await response.json();
+    } catch (error) {
+      console.error('Error fetching documents:', error);
+    } finally {
+
+      const timelineData = [];
+      console.log(timelineData);
+
+      this.files
+          .filter(file => file.tombstone === false)
+          .forEach(file => {
+            timelineData.push(file.creationDate);
+          });
+
+      // Count events per hour (0-23)
+      const hourCounts = Array(24).fill(0);
+      timelineData.forEach(ts => {
+        const date = new Date(ts.replace(/-/g, '/')); // Ensure parsing works in all browsers
+        hourCounts[date.getHours()]++;
+      });
+
+      // Labels for hours (0-23 as 12 AM, 1 AM, ..., 11 PM)
+      const hourLabels = Array.from({length: 24}, (_, i) => {
+        if (i === 0) return '12 AM';
+        if (i < 12) return `${i} AM`;
+        if (i === 12) return '12 PM';
+        return `${i - 12} PM`;
+      });
+
+      // Chart.js config
+      const ctx = document.getElementById('eventTimeChart').getContext('2d');
+      new Chart(ctx, {
+        type: 'bar',
+        data: {
+          labels: hourLabels,
+          datasets: [{
+            label: 'Number of Events',
+            data: hourCounts,
+            backgroundColor: 'rgba(54, 162, 235, 0.5)',
+            borderColor: 'rgba(54, 162, 235, 1)',
+            borderWidth: 1
+          }]
+        },
+        options: {
+          responsive: true,
+          scales: {
+            y: {
+              beginAtZero: true,
+              title: {display: true, text: 'Number of Events'}
+            },
+            x: {
+              title: {display: true, text: 'Hour of Day'}
+            }
+          },
+          plugins: {
+            title: {
+              display: true,
+              text: 'Distribution of Events by Hour of Day'
+            },
+            legend: {display: false}
+          }
+        }
+      });
+    }
 
     if (localStorage.showTombstone === 'true') {
       this.showTombstone = true;
@@ -113,7 +185,7 @@ app.component("hello-world", {
   },
 
   async created() {
-    console.log('created')
+    console.log('created');
 
     try {
       const response = await fetch('/api/files');
@@ -130,7 +202,6 @@ app.component("hello-world", {
   watch: {
     showTombstone(newValue) {
       localStorage.showTombstone = newValue;
-      console.log('Show tombstone changed:', newValue);
     }
   }
 });
