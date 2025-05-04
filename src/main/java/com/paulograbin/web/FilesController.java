@@ -12,6 +12,7 @@ import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.time.Duration;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeParseException;
@@ -31,6 +32,10 @@ public class FilesController {
     private static final String EMPTY_SERVER_KEY = EMPTY;
     private static final boolean TOMBSTONE = Boolean.TRUE;
 
+    private final static DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH-mm-ss-SSSS");
+    private final static DateTimeFormatter oldFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH-mm-ss.SSSS");
+    private final static DateTimeFormatter redableFromater = DateTimeFormatter.ofPattern("yyyy/MM/dd HH:mm:ss");
+
     private final String htmlFilesLocation;
 
     public FilesController(String htmlFilesLocation) {
@@ -42,10 +47,6 @@ public class FilesController {
         Path path = Path.of(htmlFilesLocation);
 
         File file = path.toFile();
-
-        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH-mm-ss-SSSS");
-        DateTimeFormatter oldFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH-mm-ss.SSSS");
-        DateTimeFormatter redableFromater = DateTimeFormatter.ofPattern("yyyy/MM/dd HH:mm:ss");
 
         preProcessFiles(file.listFiles());
 
@@ -149,7 +150,12 @@ public class FilesController {
             }
 
             if (next != null) {
-                FileRecord fileRecord = new FileRecord("from " + next.name() + " to " + current.name(), 0, "", "", true, current.creationDate(), next.creationDate(), current.creationDate(), current.creationTime());
+                var start = LocalDateTime.parse(next.creationDate(), redableFromater);
+                var end = LocalDateTime.parse(current.creationDate(), redableFromater);
+
+                long minutes = Duration.between(start, end).toMinutes();
+
+                FileRecord fileRecord = new FileRecord("No alerts for " + minutes, 0, "", "", true, current.creationDate(), next.creationDate(), current.creationDate(), current.creationTime());
 
                 newList.add(fileRecord);
             } else {

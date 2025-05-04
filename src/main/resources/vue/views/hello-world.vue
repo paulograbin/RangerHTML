@@ -57,7 +57,7 @@
               <div v-if="file.tombstone" class="d-flex justify-content-between align-items-center tombstone">
                   <span>
                     <i class="bi bi-info me-2"></i>
-                    <span class="filename"> {{ file.start }} to {{ file.end }}</span>
+                    <span class="filename"> {{ file.start }} to {{ file.end }} - {{ file.name }} minutes</span>
                   </span>
               </div>
 
