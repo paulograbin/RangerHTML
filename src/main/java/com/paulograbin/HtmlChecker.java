@@ -23,10 +23,8 @@ import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
@@ -36,7 +34,7 @@ import static com.paulograbin.Main.FULL_DATE_FORMAT;
 
 public class HtmlChecker implements Runnable {
 
-    private static final Logger LOG = LoggerFactory.getLogger(Main.class);
+    private static final Logger LOG = LoggerFactory.getLogger(HtmlChecker.class);
 
     private final String directoryLocation;
 
@@ -73,13 +71,15 @@ public class HtmlChecker implements Runnable {
                 ".accstorefront-6964cbc65d-xnmh5"
         );
 
-        Set<String> actualServers = new HashSet<>(5);
+        List<String> actualServers = new ArrayList<>(5);
         ExecutorService executorService = Executors.newFixedThreadPool(servers.size());
         List<File> downloadedFiles = new ArrayList<>();
 
         var randomString = RandomStringUtils.secure().nextAlphanumeric(5);
 
         for (String podName : servers) {
+            Instant start = Instant.now();
+
             executorService.submit(() -> {
                 try {
                     HttpClient client = HttpClient.newHttpClient();
@@ -98,6 +98,8 @@ public class HtmlChecker implements Runnable {
                     if (!podName.equalsIgnoreCase(routeCookie)) {
                         routeCookie = routeCookie.replace("ROUTE=", "");
                         routeCookie = routeCookie.substring(0, routeCookie.indexOf(";"));
+
+                        LOG.error("A DIFFERENT SERVER RESPONDED");
                     }
 
                     actualServers.add(routeCookie);
@@ -114,15 +116,23 @@ public class HtmlChecker implements Runnable {
                 } catch (IOException | InterruptedException e) {
                     LOG.error("Could not download the file: " + e.getMessage() + ", because " + e.getCause());
                 }
+
+                long millis = Duration.between(start, Instant.now()).toMillis();
+                LOG.info("Thread {} finished in {} server name {}", Thread.currentThread().getName(), millis, podName);
             });
         }
 
-        executorService.shutdown();
-        executorService.awaitTermination(10, TimeUnit.SECONDS);
+        var terminationResult = executorService.awaitTermination(10, TimeUnit.SECONDS);
+        LOG.info("Termination result {}", terminationResult);
 
         postDownloadChecks(downloadedFiles);
 
-        LOG.info("Actual servers:");
+        LOG.info("Actual servers ({}):", actualServers.size());
+
+        if (actualServers.size() != servers.size()) {
+            LOG.error("I got {} servers but I was expecting {}", actualServers.size(), servers.size());
+        }
+
         for (String actual : actualServers) {
             LOG.info("Actual server {}", actual);
         }
@@ -201,6 +211,10 @@ public class HtmlChecker implements Runnable {
             var name = downloadedFiles.getFirst().getName();
             var basePath = downloadedFiles.getFirst().getParent();
 
+            if (downloadedFiles.size() <= 4) {
+                LOG.error("I got only {} files but I was expecting 5", downloadedFiles.size());
+            }
+
             for (File downloadedFile : downloadedFiles) {
                 boolean delete = downloadedFile.delete();
 
@@ -228,7 +242,7 @@ public class HtmlChecker implements Runnable {
         Path path = Paths.get(basePath + "/" + formattedDate + " @ " + randomString + " @ " + server + ".html");
 
         if (!Files.exists(path)) {
-            LOG.info("Creating file {}", path);
+//            LOG.info("Saving file {}", path);
             Files.createFile(path);
         }
 
