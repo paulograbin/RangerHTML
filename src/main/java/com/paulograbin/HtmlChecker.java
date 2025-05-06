@@ -190,7 +190,15 @@ public class HtmlChecker implements Runnable {
             var i = list.get(0);
             var j = list.get(1);
 
+            double a = (double) i / j;
+            a = a * 100;
+
+            double b = (double) j / i;
+            b = b * 100;
+
             var result = Math.abs(i - j);
+            LOG.info("Size difference is {}, or {}%", result, a);
+            LOG.info("Size difference is {}, or {}%", result, b);
 
             if (result > 10) {
                 deviationCount = list.size();
