@@ -25,8 +25,11 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 
 import static com.paulograbin.Main.FULL_DATE_FORMAT;
@@ -181,7 +184,6 @@ public class HtmlChecker implements Runnable {
         }
 
         int deviationCount = 0;
-        LOG.info("Deviation count " + deviationCount);
 
         var list = sizeMap.keySet().stream().toList();
         if (list.size() > 1) {
@@ -194,6 +196,8 @@ public class HtmlChecker implements Runnable {
                 deviationCount = list.size();
             }
         }
+
+        LOG.info("Deviation count " + deviationCount);
 
         if (deviationCount > 0) {
             HttpClient client = HttpClient.newHttpClient();
