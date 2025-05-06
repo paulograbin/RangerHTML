@@ -73,7 +73,7 @@ public class HtmlChecker implements Runnable {
 
         List<String> actualServers = new ArrayList<>(5);
         ExecutorService executorService = Executors.newFixedThreadPool(servers.size());
-        List<File> downloadedFiles = new ArrayList<>();
+        List<File> downloadedFiles = new CopyOnWriteArrayList<>();
 
         var randomString = RandomStringUtils.secure().nextAlphanumeric(5);
 
@@ -125,7 +125,9 @@ public class HtmlChecker implements Runnable {
         var terminationResult = executorService.awaitTermination(10, TimeUnit.SECONDS);
         LOG.info("Termination result {}", terminationResult);
 
+        LOG.info("Before post downloade checks...");
         postDownloadChecks(downloadedFiles);
+        LOG.info("After post downloade checks...");
 
         LOG.info("Actual servers ({}):", actualServers.size());
 
