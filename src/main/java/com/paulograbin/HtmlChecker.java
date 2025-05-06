@@ -79,11 +79,12 @@ public class HtmlChecker implements Runnable {
         List<File> downloadedFiles = new CopyOnWriteArrayList<>();
 
         var randomString = RandomStringUtils.secure().nextAlphanumeric(5);
+        List<CompletableFuture> futures = new ArrayList<>(5);
 
         for (String podName : servers) {
             Instant start = Instant.now();
 
-            executorService.submit(() -> {
+            var future = CompletableFuture.runAsync(() -> {
                 try {
                     HttpClient client = HttpClient.newHttpClient();
                     HttpRequest request = HttpRequest.newBuilder()
@@ -122,18 +123,18 @@ public class HtmlChecker implements Runnable {
 
                 long millis = Duration.between(start, Instant.now()).toMillis();
                 LOG.info("Thread {} finished in {} server name {}", Thread.currentThread().getName(), millis, podName);
-            });
+            }, executorService);
+
+            future.thenRunAsync(() -> LOG.info("Done"), executorService);
+
+            futures.add(future);
         }
 
-        var terminationResult = executorService.awaitTermination(10, TimeUnit.SECONDS);
-        LOG.info("Termination result {}", terminationResult);
+        CompletableFuture.allOf(futures.toArray(new CompletableFuture[0])).join();
 
-        LOG.info("Before post downloade checks...");
         postDownloadChecks(downloadedFiles);
-        LOG.info("After post downloade checks...");
 
         LOG.info("Actual servers ({}):", actualServers.size());
-
         if (actualServers.size() != servers.size()) {
             LOG.error("I got {} servers but I was expecting {}", actualServers.size(), servers.size());
         }
