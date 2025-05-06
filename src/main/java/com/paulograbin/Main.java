@@ -37,11 +37,7 @@ public class Main {
             LOG.warn("HTML location parameter was not provided, will use fallback of {}", htmlFilesLocation);
         }
 
-        HtmlChecker checker = new HtmlChecker(htmlFilesLocation);
         FilesController filesController = new FilesController(htmlFilesLocation);
-
-        ScheduledExecutorService executorService = Executors.newScheduledThreadPool(1);
-        executorService.scheduleAtFixedRate(checker, 0, 1, TimeUnit.MINUTES);
 
         var app = Javalin.create(config -> {
             config.useVirtualThreads = true;
@@ -71,6 +67,10 @@ public class Main {
 //        app.before(ctx -> LOG.info("Handling call to {}", ctx.path()));
 
         app.start(7070);
+
+        ScheduledExecutorService executorService = Executors.newScheduledThreadPool(1);
+        HtmlChecker checker = new HtmlChecker(htmlFilesLocation);
+        executorService.scheduleAtFixedRate(checker, 0, 1, TimeUnit.MINUTES);
     }
 
     private static boolean compareFiles(File file1, File file2) {
