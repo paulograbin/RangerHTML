@@ -3,6 +3,7 @@ package com.paulograbin.web;
 import com.paulograbin.FileRecord;
 import io.javalin.http.Context;
 import io.javalin.http.HttpStatus;
+import org.apache.commons.lang3.StringUtils;
 import org.jetbrains.annotations.NotNull;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -22,6 +23,9 @@ import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+
+import static org.apache.commons.lang3.StringUtils.remove;
+import static org.apache.commons.lang3.StringUtils.trim;
 
 public class FilesController {
 
@@ -58,9 +62,13 @@ public class FilesController {
                             int firstAtChar = f.getName().indexOf("@");
                             int secondAtChar = f.getName().lastIndexOf("@");
                             var groupKey = "";
+                            var server = "";
 
                             if (firstAtChar != -1 && secondAtChar != -1 && firstAtChar != secondAtChar) {
                                 groupKey = f.getName().substring(firstAtChar + 1, secondAtChar).trim();
+
+                                server = f.getName().substring(secondAtChar + 1, f.getName().length()).trim();
+                                server = trim(remove(server, ".html"));
                             }
 
                             String creationDateString;
@@ -80,7 +88,7 @@ public class FilesController {
                                 creationDate = LocalDateTime.parse(creationDateString, oldFormatter);
                                 creationDateString = redableFromater.format(creationDate);
                             }
-                            return new FileRecord(f.getName(), f.length(), groupKey, "", false, creationDateString, "", "", creationDate);
+                            return new FileRecord(f.getName(), f.length(), groupKey, server, false, creationDateString, "", "", creationDate);
                         } else {
 
                             String creationDateString;

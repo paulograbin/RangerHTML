@@ -63,7 +63,7 @@
 
               <div v-if="!file.tombstone" class="d-flex justify-content-between align-items-center">
                 <span><i class="bi bi-file-text-fill me-2"></i>
-                  <span class="filename"></span>{{ file.creationDate }} / {{ file.group }} - {{ file.length }}
+                  <span class="filename"></span>{{ file.creationDate }} / {{ file.server }} ({{ file.group }}) - {{ file.length }}
                 </span>
                 <a :href="`/file/${file.name}`" class="btn btn-sm btn-outline-primary">
                   <i class="bi bi-download me-1"></i>Download
