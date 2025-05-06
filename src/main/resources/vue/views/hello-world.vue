@@ -116,6 +116,7 @@ app.component("hello-world", {
     } catch (error) {
       console.error('Error fetching documents:', error);
     } finally {
+      this.loading = false;  // <--- important! even if fetch fails
 
       const timelineData = [];
       console.log(timelineData);
@@ -186,17 +187,6 @@ app.component("hello-world", {
 
   async created() {
     console.log('created');
-
-    try {
-      const response = await fetch('/api/files');
-      if (!response.ok) throw new Error('Failed to fetch documents.');
-
-      this.files = await response.json();
-    } catch (error) {
-      console.error('Error fetching documents:', error);
-    } finally {
-      this.loading = false;  // <--- important! even if fetch fails
-    }
   },
 
   watch: {
