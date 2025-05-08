@@ -159,7 +159,7 @@ public class HtmlChecker implements Runnable {
         // Filter out lines containing "CSRF"
         StringBuilder filteredContent = new StringBuilder();
         for (String line : lines) {
-            if (!line.contains("CSRF") && !line.contains("<p>nowTime:")) {
+            if (!line.contains("CSRF") && !line.contains("<p>now")) {
                 filteredContent.append(line).append(System.lineSeparator());
             }
         }
