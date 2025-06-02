@@ -29,12 +29,22 @@
           <!-- Checkbox for tombstone toggle -->
           <div class="col-md-4 d-flex align-items-center">
             <div class="form-check ms-3">
-              <input class="form-check-input" type="checkbox" id="recentFilesOnly" v-model="recentFilesOnly">
-              <label class="form-check-label" for="recentFilesOnly">
-                Recent files only
+              <input class="form-check-input" type="checkbox" id="showErrors" v-model="showErrors">
+              <label class="form-check-label" for="showErrors">
+                Show errors
               </label>
             </div>
           </div>
+
+<!--          &lt;!&ndash; Checkbox for tombstone toggle &ndash;&gt;-->
+<!--          <div class="col-md-4 d-flex align-items-center">-->
+<!--            <div class="form-check ms-3">-->
+<!--              <input class="form-check-input" type="checkbox" id="recentFilesOnly" v-model="recentFilesOnly">-->
+<!--              <label class="form-check-label" for="recentFilesOnly">-->
+<!--                Recent files only-->
+<!--              </label>-->
+<!--            </div>-->
+<!--          </div>-->
 
           <!-- Loading Spinner -->
           <div v-if="loading" class="text-center py-5">
@@ -88,6 +98,7 @@ app.component("hello-world", {
       files: [],
       searchQuery: "",
       showTombstone: false,
+      showErrors: true,
       recentFilesOnly: false,
       loading: true,
     }
@@ -100,6 +111,11 @@ app.component("hello-world", {
         if (!this.showTombstone && file.tombstone) {
           return false;
         }
+
+        if (!this.showErrors && !file.tombstone) {
+          return false
+        }
+
         return matchesSearch;
       });
     }
@@ -183,6 +199,11 @@ app.component("hello-world", {
     } else {
       this.showTombstone = false;
     }
+    if (localStorage.showErrors === 'true') {
+      this.showErrors = true;
+    } else {
+      this.showErrors = false;
+    }
   },
 
   async created() {
@@ -192,7 +213,10 @@ app.component("hello-world", {
   watch: {
     showTombstone(newValue) {
       localStorage.showTombstone = newValue;
-    }
+    },
+    showErrors(newValue) {
+      localStorage.showErrors = newValue;
+    },
   }
 });
 </script>

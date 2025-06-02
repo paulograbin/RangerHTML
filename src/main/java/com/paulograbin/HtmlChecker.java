@@ -21,16 +21,15 @@ import java.time.Duration;
 import java.time.Instant;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Date;
-import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
-import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
-import java.util.concurrent.Future;
-import java.util.concurrent.TimeUnit;
 
 import static com.paulograbin.Main.FULL_DATE_FORMAT;
 
@@ -157,7 +156,7 @@ public class HtmlChecker implements Runnable {
         // Filter out lines containing "CSRF"
         StringBuilder filteredContent = new StringBuilder();
         for (String line : lines) {
-            if (!line.contains("CSRF") && !line.contains("<p>nowTime:")) {
+            if (!line.contains("CSRF") && !line.contains("<p>now")) {
                 filteredContent.append(line).append(System.lineSeparator());
             }
         }
@@ -173,34 +172,31 @@ public class HtmlChecker implements Runnable {
             return;
         }
 
-        Map<Long, Integer> sizeMap = new HashMap<>(downloadedFiles.size());
+        Set<Long> sizes = new HashSet<>(downloadedFiles.size());
         for (File file : downloadedFiles) {
             long fileSize = file.length();
 
-            sizeMap.put(fileSize, sizeMap.getOrDefault(fileSize, 0) + 1);
+            sizes.add(fileSize);
 
             LOG.info("File " + file.getName() + " has size: " + fileSize);
         }
 
         int deviationCount = 0;
 
-        var list = sizeMap.keySet().stream().toList();
-        if (list.size() > 1) {
-            var i = list.get(0);
-            var j = list.get(1);
+        List<Long> sortedSizes = new ArrayList<>(sizes);
+        Collections.sort(sortedSizes);
 
-            double a = (double) i / j;
-            a = a * 100;
+        for (int x = 0; x < sortedSizes.size() - 1; x++) {
+            long size1 = sortedSizes.get(x);
+            long size2 = sortedSizes.get(x + 1);
+            long diff = Math.abs(size1 - size2);
+            double percentDiff = (100.0 * diff) / Math.min(size1, size2);
 
-            double b = (double) j / i;
-            b = b * 100;
+            LOG.info("Difference between {} and {} is {} bytes ({}%)", size1, size2, diff, percentDiff);
 
-            var result = Math.abs(i - j);
-            LOG.info("Size difference is {}, or {}%", result, a);
-            LOG.info("Size difference is {}, or {}%", result, b);
-
-            if (result > 10) {
-                deviationCount = list.size();
+            // Use a clear threshold, e.g., 10% difference
+            if (percentDiff > 10.0) {
+                deviationCount++;
             }
         }
 
@@ -242,7 +238,6 @@ public class HtmlChecker implements Runnable {
 
             var tombStoneFile = new File(basePath + "/tombstone " + newName);
             tombStoneFile.createNewFile();
-            LOG.info("Tombstone file created");
         }
     }
 
