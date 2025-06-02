@@ -271,8 +271,6 @@ public class HtmlChecker implements Runnable {
                 LOG.info("Thread {} finished in {} server name {}", Thread.currentThread().getName(), millis, podName);
             }, executorService);
 
-            future.thenRunAsync(() -> LOG.info("Done"), executorService);
-
             futures.add(future);
         }
 
