@@ -25,8 +25,10 @@ import java.util.Collections;
 import java.util.Date;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -38,10 +40,28 @@ public class HtmlChecker implements Runnable {
 
     private static final Logger LOG = LoggerFactory.getLogger(HtmlChecker.class);
 
+    private Map<String, String> servers = new ConcurrentHashMap(5);
     private final String directoryLocation;
 
     public HtmlChecker(String diretoryLocation) {
         this.directoryLocation = diretoryLocation;
+
+        try {
+            fetchServers();
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        } catch (InterruptedException e) {
+            throw new RuntimeException(e);
+        }
+
+        if (this.servers.size() != 5) {
+            LOG.warn("Did not find 5 servers, instead found {}... please check storefront configuration", this.servers.size());
+        }
+    }
+
+    public static void main(String[] args) throws IOException, InterruptedException {
+        HtmlChecker htmlChecker = new HtmlChecker("/home/paulo/Desktop/html");
+        htmlChecker.fetchServers();
     }
 
     @Override
@@ -51,6 +71,138 @@ public class HtmlChecker implements Runnable {
         } catch (InterruptedException | IOException e) {
             throw new RuntimeException(e);
         }
+    }
+
+    private void fetchServers() throws IOException, InterruptedException {
+        Runnable a = () -> {
+            HttpClient client = HttpClient.newHttpClient();
+            HttpRequest request = HttpRequest.newBuilder()
+                    .uri(URI.create("https://www.lkbennett.com"))
+                    .build();
+
+            HttpResponse<String> response;
+            try {
+                response = client.send(request, HttpResponse.BodyHandlers.ofString());
+            } catch (IOException | InterruptedException e) {
+                throw new RuntimeException(e);
+            }
+
+            var routeCookie = response.headers()
+                    .allValues("set-cookie")
+                    .stream()
+                    .filter(string -> string.startsWith("ROUTE="))
+                    .findAny().orElse("default");
+
+            var start = routeCookie.indexOf(".");
+            routeCookie = routeCookie.substring(start, routeCookie.indexOf(";"));
+
+            servers.put(routeCookie, "");
+        };
+
+        ExecutorService executorService = Executors.newFixedThreadPool(10);
+        CompletableFuture.runAsync(a, executorService);
+        CompletableFuture.runAsync(a, executorService);
+        CompletableFuture.runAsync(a, executorService);
+        CompletableFuture.runAsync(a, executorService);
+        CompletableFuture.runAsync(a, executorService);
+        CompletableFuture.runAsync(a, executorService);
+        CompletableFuture.runAsync(a, executorService);
+        CompletableFuture.runAsync(a, executorService);
+        CompletableFuture.runAsync(a, executorService);
+        CompletableFuture.runAsync(a, executorService);
+        CompletableFuture.runAsync(a, executorService);
+        CompletableFuture.runAsync(a, executorService);
+        CompletableFuture.runAsync(a, executorService);
+        CompletableFuture.runAsync(a, executorService);
+        CompletableFuture.runAsync(a, executorService);
+        CompletableFuture.runAsync(a, executorService);
+        CompletableFuture.runAsync(a, executorService);
+        CompletableFuture.runAsync(a, executorService);
+        CompletableFuture.runAsync(a, executorService);
+        CompletableFuture.runAsync(a, executorService);
+        CompletableFuture.runAsync(a, executorService);
+        CompletableFuture.runAsync(a, executorService);
+        CompletableFuture.runAsync(a, executorService);
+        CompletableFuture.runAsync(a, executorService);
+        CompletableFuture.runAsync(a, executorService);
+        CompletableFuture.runAsync(a, executorService);
+        CompletableFuture.runAsync(a, executorService);
+        CompletableFuture.runAsync(a, executorService);
+        CompletableFuture.runAsync(a, executorService);
+        CompletableFuture.runAsync(a, executorService);
+        CompletableFuture.runAsync(a, executorService);
+        CompletableFuture.runAsync(a, executorService);
+        CompletableFuture.runAsync(a, executorService);
+        CompletableFuture.runAsync(a, executorService);
+        CompletableFuture.runAsync(a, executorService);
+        CompletableFuture.runAsync(a, executorService);
+        CompletableFuture.runAsync(a, executorService);
+        CompletableFuture.runAsync(a, executorService);
+        CompletableFuture.runAsync(a, executorService);
+        CompletableFuture.runAsync(a, executorService);
+        CompletableFuture.runAsync(a, executorService);
+        CompletableFuture.runAsync(a, executorService);
+        CompletableFuture.runAsync(a, executorService);
+        CompletableFuture.runAsync(a, executorService);
+        CompletableFuture.runAsync(a, executorService);
+        CompletableFuture.runAsync(a, executorService);
+        CompletableFuture.runAsync(a, executorService);
+        CompletableFuture.runAsync(a, executorService);
+        CompletableFuture.runAsync(a, executorService);
+        CompletableFuture.runAsync(a, executorService);
+        CompletableFuture.runAsync(a, executorService);
+        CompletableFuture.runAsync(a, executorService);
+        CompletableFuture.runAsync(a, executorService);
+        CompletableFuture.runAsync(a, executorService);
+        CompletableFuture.runAsync(a, executorService);
+        CompletableFuture.runAsync(a, executorService);
+        CompletableFuture.runAsync(a, executorService);
+        CompletableFuture.runAsync(a, executorService);
+        CompletableFuture.runAsync(a, executorService);
+        CompletableFuture.runAsync(a, executorService);
+        CompletableFuture.runAsync(a, executorService);
+        CompletableFuture.runAsync(a, executorService);
+        CompletableFuture.runAsync(a, executorService);
+        CompletableFuture.runAsync(a, executorService);
+        CompletableFuture.runAsync(a, executorService);
+        CompletableFuture.runAsync(a, executorService);
+        CompletableFuture.runAsync(a, executorService);
+        CompletableFuture.runAsync(a, executorService);
+        CompletableFuture.runAsync(a, executorService);
+        CompletableFuture.runAsync(a, executorService);
+        CompletableFuture.runAsync(a, executorService);
+        CompletableFuture.runAsync(a, executorService);
+        CompletableFuture.runAsync(a, executorService);
+        CompletableFuture.runAsync(a, executorService);
+        CompletableFuture.runAsync(a, executorService);
+        CompletableFuture.runAsync(a, executorService);
+        CompletableFuture.runAsync(a, executorService);
+        CompletableFuture.runAsync(a, executorService);
+        CompletableFuture.runAsync(a, executorService);
+        CompletableFuture.runAsync(a, executorService);
+        CompletableFuture.runAsync(a, executorService);
+        CompletableFuture.runAsync(a, executorService);
+        CompletableFuture.runAsync(a, executorService);
+        CompletableFuture.runAsync(a, executorService);
+        CompletableFuture.runAsync(a, executorService);
+        CompletableFuture.runAsync(a, executorService);
+        CompletableFuture.runAsync(a, executorService);
+        CompletableFuture.runAsync(a, executorService);
+        CompletableFuture.runAsync(a, executorService);
+        CompletableFuture.runAsync(a, executorService);
+        CompletableFuture.runAsync(a, executorService);
+        CompletableFuture.runAsync(a, executorService);
+        CompletableFuture.runAsync(a, executorService);
+        CompletableFuture.runAsync(a, executorService);
+        CompletableFuture.runAsync(a, executorService);
+        CompletableFuture.runAsync(a, executorService).thenRun(() -> {
+            LOG.info("Servers ({}):", servers.size());
+
+            for (String server : servers.keySet()) {
+                LOG.info("Server {}", server);
+            }
+
+        });
     }
 
     private void runInternal() throws InterruptedException, IOException {
@@ -65,22 +217,14 @@ public class HtmlChecker implements Runnable {
             path.toFile().mkdir();
         }
 
-        var servers = List.of(
-                ".accstorefront-6964cbc65d-h5mf6",
-                ".accstorefront-6964cbc65d-gq8h9",
-                ".accstorefront-6964cbc65d-8xq2l",
-                ".accstorefront-6964cbc65d-m8hxm",
-                ".accstorefront-6964cbc65d-xnmh5"
-        );
-
         List<String> actualServers = new ArrayList<>(5);
-        ExecutorService executorService = Executors.newFixedThreadPool(servers.size());
+        ExecutorService executorService = Executors.newFixedThreadPool(5);
         List<File> downloadedFiles = new CopyOnWriteArrayList<>();
 
         var randomString = RandomStringUtils.secure().nextAlphanumeric(5);
         List<CompletableFuture> futures = new ArrayList<>(5);
 
-        for (String podName : servers) {
+        for (String podName : servers.keySet()) {
             Instant start = Instant.now();
 
             var future = CompletableFuture.runAsync(() -> {
@@ -103,6 +247,9 @@ public class HtmlChecker implements Runnable {
                         routeCookie = routeCookie.substring(0, routeCookie.indexOf(";"));
 
                         LOG.error("A DIFFERENT SERVER RESPONDED");
+
+                        servers.remove(podName);
+                        servers.put(routeCookie, "");
                     }
 
                     actualServers.add(routeCookie);
