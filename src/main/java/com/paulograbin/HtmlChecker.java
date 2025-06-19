@@ -40,7 +40,7 @@ public class HtmlChecker implements Runnable {
 
     private static final Logger LOG = LoggerFactory.getLogger(HtmlChecker.class);
 
-    private Map<String, String> servers = new ConcurrentHashMap(5);
+    private final Map<String, String> servers = new ConcurrentHashMap<>(5);
     private final String directoryLocation;
 
     public HtmlChecker(String diretoryLocation) {
