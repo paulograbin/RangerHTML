@@ -32,6 +32,7 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.TimeUnit;
 
 import static com.paulograbin.Main.FULL_DATE_FORMAT;
 
@@ -46,13 +47,11 @@ public class HtmlChecker implements Runnable {
     private static final int EXPECTED_SERVER_NODE_COUNT = 5;
 
     public HtmlChecker(String diretoryLocation) {
-        this.directoryLocation = diretoryLocation;
+        directoryLocation = diretoryLocation;
 
         try {
             fetchServers();
-        } catch (IOException e) {
-            throw new RuntimeException(e);
-        } catch (InterruptedException e) {
+        } catch (IOException | InterruptedException e) {
             throw new RuntimeException(e);
         }
 
@@ -101,7 +100,20 @@ public class HtmlChecker implements Runnable {
             servers.put(routeCookie, "");
         };
 
-        ExecutorService executorService = Executors.newFixedThreadPool(10);
+        ExecutorService executorService = Executors.newFixedThreadPool(30);
+        CompletableFuture.runAsync(a, executorService);
+        CompletableFuture.runAsync(a, executorService);
+        CompletableFuture.runAsync(a, executorService);
+        CompletableFuture.runAsync(a, executorService);
+        CompletableFuture.runAsync(a, executorService);
+        CompletableFuture.runAsync(a, executorService);
+        CompletableFuture.runAsync(a, executorService);
+        CompletableFuture.runAsync(a, executorService);
+        CompletableFuture.runAsync(a, executorService);
+        CompletableFuture.runAsync(a, executorService);
+        CompletableFuture.runAsync(a, executorService);
+        CompletableFuture.runAsync(a, executorService);
+        CompletableFuture.runAsync(a, executorService);
         CompletableFuture.runAsync(a, executorService);
         CompletableFuture.runAsync(a, executorService);
         CompletableFuture.runAsync(a, executorService);
@@ -203,8 +215,16 @@ public class HtmlChecker implements Runnable {
             for (String server : servers.keySet()) {
                 LOG.info("Server {}", server);
             }
-
         });
+
+        executorService.shutdown();
+        boolean b = executorService.awaitTermination(5, TimeUnit.SECONDS);
+
+        if (b) {
+            LOG.info("Executor terminated successfully");
+        } else {
+            LOG.info("Executor timed out");
+        }
     }
 
     private void runInternal() throws InterruptedException, IOException {
