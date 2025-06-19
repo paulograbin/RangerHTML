@@ -43,6 +43,8 @@ public class HtmlChecker implements Runnable {
     private final Map<String, String> servers = new ConcurrentHashMap<>(5);
     private final String directoryLocation;
 
+    private static final int EXPECTED_SERVER_NODE_COUNT = 5;
+
     public HtmlChecker(String diretoryLocation) {
         this.directoryLocation = diretoryLocation;
 
@@ -54,8 +56,8 @@ public class HtmlChecker implements Runnable {
             throw new RuntimeException(e);
         }
 
-        if (this.servers.size() != 5) {
-            LOG.warn("Did not find 5 servers, instead found {}... please check storefront configuration", this.servers.size());
+        if (servers.size() != EXPECTED_SERVER_NODE_COUNT) {
+            LOG.warn("Did not find {} servers, instead found {}... please check storefront configuration", EXPECTED_SERVER_NODE_COUNT, servers.size());
         }
     }
 
@@ -217,8 +219,8 @@ public class HtmlChecker implements Runnable {
             path.toFile().mkdir();
         }
 
-        List<String> actualServers = new ArrayList<>(5);
-        ExecutorService executorService = Executors.newFixedThreadPool(5);
+        List<String> actualServers = new ArrayList<>(EXPECTED_SERVER_NODE_COUNT);
+        ExecutorService executorService = Executors.newFixedThreadPool(EXPECTED_SERVER_NODE_COUNT);
         List<File> downloadedFiles = new CopyOnWriteArrayList<>();
 
         var randomString = RandomStringUtils.secure().nextAlphanumeric(5);
@@ -367,8 +369,8 @@ public class HtmlChecker implements Runnable {
             var name = downloadedFiles.getFirst().getName();
             var basePath = downloadedFiles.getFirst().getParent();
 
-            if (downloadedFiles.size() <= 4) {
-                LOG.error("I got only {} files but I was expecting 5", downloadedFiles.size());
+            if (downloadedFiles.size() < EXPECTED_SERVER_NODE_COUNT) {
+                LOG.error("I got {} files but I was expecting {}", downloadedFiles.size(), EXPECTED_SERVER_NODE_COUNT);
             }
 
             for (File downloadedFile : downloadedFiles) {
