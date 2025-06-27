@@ -1,0 +1,1 @@
+java -Xlog:gc -XX:+UnlockExperimentalVMOptions -XX:+UseShenandoahGC  -XX:ShenandoahGCMode=generational -jar target/checker-2.2-jar-with-dependencies.jar
