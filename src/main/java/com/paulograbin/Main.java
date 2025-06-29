@@ -35,6 +35,10 @@ public class Main {
             htmlFilesLocation = homeDirectoryForCurrentUser + "/Desktop/html";
 
             LOG.warn("HTML location parameter was not provided, will use fallback of {}", htmlFilesLocation);
+        } else {
+            htmlFilesLocation = args[0];
+
+            LOG.info("Download path set from environment to {}", htmlFilesLocation);
         }
 
         FilesController filesController = new FilesController(htmlFilesLocation);
@@ -58,6 +62,7 @@ public class Main {
         app.get("/pdp", new VueComponent("pdp"));
         app.get("/file/{fileName}", filesController::loadFile);
         app.get("/api/files", filesController::loadAllFiles);
+        app.get("/api/today", filesController::loadToday);
 
         app.get("/_ui/*", ExternalAssetController::get);
         app.get("/_s/login-status", FakeController::getLogin);
