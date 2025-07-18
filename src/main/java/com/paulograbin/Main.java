@@ -67,7 +67,6 @@ public class Main {
         app.get("/pdp", new VueComponent("pdp"));
         app.get("/file/{fileName}", filesController::loadFile);
         app.get("/api/files", filesController::loadAllFiles);
-        app.get("/api/today", filesController::loadToday);
 
         app.get("/_ui/*", ExternalAssetController::get);
         app.get("/_s/login-status", FakeController::getLogin);
