@@ -12,6 +12,7 @@ import java.net.http.HttpClient;
 import java.net.http.HttpHeaders;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
+import java.time.Duration;
 
 
 public class ExternalAssetController {
@@ -24,7 +25,7 @@ public class ExternalAssetController {
 
         String path = "https://www.lkbennett.com" + context.path();
 
-        HttpClient client = HttpClient.newHttpClient();
+        HttpClient client = HttpClient.newBuilder().connectTimeout(Duration.ofSeconds(5)).build();
         HttpRequest request = HttpRequest.newBuilder()
                 .uri(URI.create(path))
                 .build();

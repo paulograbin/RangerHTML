@@ -79,7 +79,7 @@ public class HtmlChecker implements Runnable {
 
     private void fetchServers() throws IOException, InterruptedException {
         Runnable discoverServer = () -> {
-            HttpClient client = HttpClient.newHttpClient();
+            HttpClient client = HttpClient.newBuilder().connectTimeout(Duration.ofSeconds(5)).build();
             HttpRequest request = HttpRequest.newBuilder()
                     .uri(URI.create("https://www.lkbennett.com"))
                     .build();
@@ -151,7 +151,7 @@ public class HtmlChecker implements Runnable {
 
             var future = CompletableFuture.runAsync(() -> {
                 try {
-                    HttpClient client = HttpClient.newHttpClient();
+                    HttpClient client = HttpClient.newBuilder().connectTimeout(Duration.ofSeconds(5)).build();
                     HttpRequest request = HttpRequest.newBuilder()
                             .uri(URI.create("https://www.lkbennett.com"))
                             .setHeader("cookie", "ROUTE=" + podName + ";")
@@ -275,7 +275,7 @@ public class HtmlChecker implements Runnable {
             if (ntfyTopic.isBlank()) {
                 LOG.warn("Deviation detected but NTFY_TOPIC is not configured, skipping alert");
             } else {
-                HttpClient client = HttpClient.newHttpClient();
+                HttpClient client = HttpClient.newBuilder().connectTimeout(Duration.ofSeconds(5)).build();
                 HttpRequest request = HttpRequest.newBuilder()
                         .uri(URI.create("https://ntfy.sh/" + ntfyTopic))
                         .POST(HttpRequest.BodyPublishers.ofString("Diff of " + deviationCount))
