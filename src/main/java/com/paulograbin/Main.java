@@ -46,6 +46,12 @@ public class Main {
             LOG.info("Download path set from environment to {}", htmlFilesLocation);
         }
 
+        String ntfyTopic = System.getenv("NTFY_TOPIC");
+        if (ntfyTopic == null || ntfyTopic.isBlank()) {
+            LOG.error("NTFY_TOPIC environment variable is not set. Alerts will not be sent.");
+            ntfyTopic = "";
+        }
+
         FilesController filesController = new FilesController(htmlFilesLocation);
 
         var app = Javalin.create(config -> {
@@ -78,7 +84,7 @@ public class Main {
         app.start(7070);
 
         ScheduledExecutorService executorService = Executors.newScheduledThreadPool(1);
-        HtmlChecker checker = new HtmlChecker(htmlFilesLocation);
+        HtmlChecker checker = new HtmlChecker(htmlFilesLocation, ntfyTopic);
         executorService.scheduleAtFixedRate(checker, 0, 1, TimeUnit.MINUTES);
     }
 

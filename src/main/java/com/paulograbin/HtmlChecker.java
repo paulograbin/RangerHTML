@@ -43,12 +43,14 @@ public class HtmlChecker implements Runnable {
 
     private final Map<String, String> servers = new ConcurrentHashMap<>(5);
     private final String directoryLocation;
+    private final String ntfyTopic;
 
     private static final int EXPECTED_SERVER_NODE_COUNT = 3;
     private static final int DISCOVERY_REQUESTS_COUNT = EXPECTED_SERVER_NODE_COUNT * 5;
 
-    public HtmlChecker(String diretoryLocation) {
+    public HtmlChecker(String diretoryLocation, String ntfyTopic) {
         directoryLocation = diretoryLocation;
+        this.ntfyTopic = ntfyTopic;
 
         try {
             fetchServers();
@@ -62,7 +64,7 @@ public class HtmlChecker implements Runnable {
     }
 
     public static void main(String[] args) throws IOException, InterruptedException {
-        HtmlChecker htmlChecker = new HtmlChecker("/home/paulo/Desktop/html");
+        HtmlChecker htmlChecker = new HtmlChecker("/home/paulo/Desktop/html", "htmlDifferences");
         htmlChecker.fetchServers();
     }
 
@@ -234,7 +236,7 @@ public class HtmlChecker implements Runnable {
         }
     }
 
-    private static void postDownloadChecks(List<File> downloadedFiles) throws IOException {
+    private void postDownloadChecks(List<File> downloadedFiles) throws IOException {
         if (downloadedFiles.isEmpty()) {
             return;
         }
@@ -270,18 +272,22 @@ public class HtmlChecker implements Runnable {
         LOG.info("Deviation count " + deviationCount);
 
         if (deviationCount > 0) {
-            HttpClient client = HttpClient.newHttpClient();
-            HttpRequest request = HttpRequest.newBuilder()
-                    .uri(URI.create("https://ntfy.sh/htmlDifferences"))
-                    .POST(HttpRequest.BodyPublishers.ofString("Diff of " + deviationCount))
-                    .build();
+            if (ntfyTopic.isBlank()) {
+                LOG.warn("Deviation detected but NTFY_TOPIC is not configured, skipping alert");
+            } else {
+                HttpClient client = HttpClient.newHttpClient();
+                HttpRequest request = HttpRequest.newBuilder()
+                        .uri(URI.create("https://ntfy.sh/" + ntfyTopic))
+                        .POST(HttpRequest.BodyPublishers.ofString("Diff of " + deviationCount))
+                        .build();
 
-            try {
-                HttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString());
+                try {
+                    HttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString());
 
-                LOG.info("Response from ntfy: {}", response.statusCode());
-            } catch (IOException | InterruptedException e) {
-                throw new RuntimeException(e);
+                    LOG.info("Response from ntfy: {}", response.statusCode());
+                } catch (IOException | InterruptedException e) {
+                    throw new RuntimeException(e);
+                }
             }
         } else {
             var name = downloadedFiles.getFirst().getName();
