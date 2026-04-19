@@ -4,6 +4,8 @@ A monitoring tool that detects content inconsistencies across load-balanced serv
 
 Currently configured to monitor [lkbennett.com](https://www.lkbennett.com), where multiple server nodes behind a load balancer should serve identical content. The target site and expected server count are hardcoded — see [Limitations](#limitations).
 
+Original idea came from the fact that some server instances would not have specific marketing campaign banners due to improper caching keys.
+
 ## How it works
 
 1. **Server discovery** — On startup, sends multiple concurrent requests to the target site and collects the distinct `ROUTE` cookies returned by the load balancer. Each unique cookie value identifies a backend server node. Currently expects 3 nodes.
