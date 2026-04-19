@@ -44,7 +44,8 @@ public class HtmlChecker implements Runnable {
     private final Map<String, String> servers = new ConcurrentHashMap<>(5);
     private final String directoryLocation;
 
-    private static final int EXPECTED_SERVER_NODE_COUNT = 5;
+    private static final int EXPECTED_SERVER_NODE_COUNT = 3;
+    private static final int DISCOVERY_REQUESTS_COUNT = EXPECTED_SERVER_NODE_COUNT * 5;
 
     public HtmlChecker(String diretoryLocation) {
         directoryLocation = diretoryLocation;
@@ -75,7 +76,7 @@ public class HtmlChecker implements Runnable {
     }
 
     private void fetchServers() throws IOException, InterruptedException {
-        Runnable a = () -> {
+        Runnable discoverServer = () -> {
             HttpClient client = HttpClient.newHttpClient();
             HttpRequest request = HttpRequest.newBuilder()
                     .uri(URI.create("https://www.lkbennett.com"))
@@ -100,122 +101,19 @@ public class HtmlChecker implements Runnable {
             servers.put(routeCookie, "");
         };
 
-        ExecutorService executorService = Executors.newFixedThreadPool(30);
-        CompletableFuture.runAsync(a, executorService);
-        CompletableFuture.runAsync(a, executorService);
-        CompletableFuture.runAsync(a, executorService);
-        CompletableFuture.runAsync(a, executorService);
-        CompletableFuture.runAsync(a, executorService);
-        CompletableFuture.runAsync(a, executorService);
-        CompletableFuture.runAsync(a, executorService);
-        CompletableFuture.runAsync(a, executorService);
-        CompletableFuture.runAsync(a, executorService);
-        CompletableFuture.runAsync(a, executorService);
-        CompletableFuture.runAsync(a, executorService);
-        CompletableFuture.runAsync(a, executorService);
-        CompletableFuture.runAsync(a, executorService);
-        CompletableFuture.runAsync(a, executorService);
-        CompletableFuture.runAsync(a, executorService);
-        CompletableFuture.runAsync(a, executorService);
-        CompletableFuture.runAsync(a, executorService);
-        CompletableFuture.runAsync(a, executorService);
-        CompletableFuture.runAsync(a, executorService);
-        CompletableFuture.runAsync(a, executorService);
-        CompletableFuture.runAsync(a, executorService);
-        CompletableFuture.runAsync(a, executorService);
-        CompletableFuture.runAsync(a, executorService);
-        CompletableFuture.runAsync(a, executorService);
-        CompletableFuture.runAsync(a, executorService);
-        CompletableFuture.runAsync(a, executorService);
-        CompletableFuture.runAsync(a, executorService);
-        CompletableFuture.runAsync(a, executorService);
-        CompletableFuture.runAsync(a, executorService);
-        CompletableFuture.runAsync(a, executorService);
-        CompletableFuture.runAsync(a, executorService);
-        CompletableFuture.runAsync(a, executorService);
-        CompletableFuture.runAsync(a, executorService);
-        CompletableFuture.runAsync(a, executorService);
-        CompletableFuture.runAsync(a, executorService);
-        CompletableFuture.runAsync(a, executorService);
-        CompletableFuture.runAsync(a, executorService);
-        CompletableFuture.runAsync(a, executorService);
-        CompletableFuture.runAsync(a, executorService);
-        CompletableFuture.runAsync(a, executorService);
-        CompletableFuture.runAsync(a, executorService);
-        CompletableFuture.runAsync(a, executorService);
-        CompletableFuture.runAsync(a, executorService);
-        CompletableFuture.runAsync(a, executorService);
-        CompletableFuture.runAsync(a, executorService);
-        CompletableFuture.runAsync(a, executorService);
-        CompletableFuture.runAsync(a, executorService);
-        CompletableFuture.runAsync(a, executorService);
-        CompletableFuture.runAsync(a, executorService);
-        CompletableFuture.runAsync(a, executorService);
-        CompletableFuture.runAsync(a, executorService);
-        CompletableFuture.runAsync(a, executorService);
-        CompletableFuture.runAsync(a, executorService);
-        CompletableFuture.runAsync(a, executorService);
-        CompletableFuture.runAsync(a, executorService);
-        CompletableFuture.runAsync(a, executorService);
-        CompletableFuture.runAsync(a, executorService);
-        CompletableFuture.runAsync(a, executorService);
-        CompletableFuture.runAsync(a, executorService);
-        CompletableFuture.runAsync(a, executorService);
-        CompletableFuture.runAsync(a, executorService);
-        CompletableFuture.runAsync(a, executorService);
-        CompletableFuture.runAsync(a, executorService);
-        CompletableFuture.runAsync(a, executorService);
-        CompletableFuture.runAsync(a, executorService);
-        CompletableFuture.runAsync(a, executorService);
-        CompletableFuture.runAsync(a, executorService);
-        CompletableFuture.runAsync(a, executorService);
-        CompletableFuture.runAsync(a, executorService);
-        CompletableFuture.runAsync(a, executorService);
-        CompletableFuture.runAsync(a, executorService);
-        CompletableFuture.runAsync(a, executorService);
-        CompletableFuture.runAsync(a, executorService);
-        CompletableFuture.runAsync(a, executorService);
-        CompletableFuture.runAsync(a, executorService);
-        CompletableFuture.runAsync(a, executorService);
-        CompletableFuture.runAsync(a, executorService);
-        CompletableFuture.runAsync(a, executorService);
-        CompletableFuture.runAsync(a, executorService);
-        CompletableFuture.runAsync(a, executorService);
-        CompletableFuture.runAsync(a, executorService);
-        CompletableFuture.runAsync(a, executorService);
-        CompletableFuture.runAsync(a, executorService);
-        CompletableFuture.runAsync(a, executorService);
-        CompletableFuture.runAsync(a, executorService);
-        CompletableFuture.runAsync(a, executorService);
-        CompletableFuture.runAsync(a, executorService);
-        CompletableFuture.runAsync(a, executorService);
-        CompletableFuture.runAsync(a, executorService);
-        CompletableFuture.runAsync(a, executorService);
-        CompletableFuture.runAsync(a, executorService);
-        CompletableFuture.runAsync(a, executorService);
-        CompletableFuture.runAsync(a, executorService);
-        CompletableFuture.runAsync(a, executorService);
-        CompletableFuture.runAsync(a, executorService);
-        CompletableFuture.runAsync(a, executorService);
-        CompletableFuture.runAsync(a, executorService);
-        CompletableFuture.runAsync(a, executorService);
-        CompletableFuture.runAsync(a, executorService);
-        CompletableFuture.runAsync(a, executorService);
-        CompletableFuture.runAsync(a, executorService);
-        CompletableFuture.runAsync(a, executorService);
-        CompletableFuture.runAsync(a, executorService);
-        CompletableFuture.runAsync(a, executorService);
-        CompletableFuture.runAsync(a, executorService);
-        CompletableFuture.runAsync(a, executorService);
-        CompletableFuture.runAsync(a, executorService);
-        CompletableFuture.runAsync(a, executorService);
-        CompletableFuture.runAsync(a, executorService).thenRun(() -> {
-            LOG.info("Servers ({}):", servers.size());
+        ExecutorService executorService = Executors.newFixedThreadPool(DISCOVERY_REQUESTS_COUNT);
+        List<CompletableFuture<Void>> futures = new ArrayList<>(DISCOVERY_REQUESTS_COUNT);
 
-            for (String server : servers.keySet()) {
-                LOG.info("Server {}", server);
-            }
-        });
+        for (int i = 0; i < DISCOVERY_REQUESTS_COUNT; i++) {
+            futures.add(CompletableFuture.runAsync(discoverServer, executorService));
+        }
+
+        CompletableFuture.allOf(futures.toArray(new CompletableFuture[0])).join();
+
+        LOG.info("Servers ({}):", servers.size());
+        for (String server : servers.keySet()) {
+            LOG.info("Server {}", server);
+        }
 
         executorService.shutdown();
         boolean b = executorService.awaitTermination(5, TimeUnit.SECONDS);
