@@ -218,22 +218,41 @@ public class HtmlChecker implements Runnable {
 
     private static void filterFileContent(Path file) throws IOException {
         String htmlContent = new String(Files.readAllBytes(file));
+        String filtered = filterHtmlContent(htmlContent);
 
-        // Split the HTML into lines
+        try (BufferedWriter writer = new BufferedWriter(new FileWriter(file.toFile()))) {
+            writer.write(filtered);
+        }
+    }
+
+    static String filterHtmlContent(String htmlContent) {
         String[] lines = htmlContent.split("\n");
 
-        // Filter out lines containing "CSRF"
         StringBuilder filteredContent = new StringBuilder();
         for (String line : lines) {
             if (!line.contains("CSRF") && !line.contains("<p>now")) {
                 filteredContent.append(line).append(System.lineSeparator());
             }
         }
+        return filteredContent.toString();
+    }
 
-        // Save the filtered content back to the original file
-        try (BufferedWriter writer = new BufferedWriter(new FileWriter(file.toFile()))) {
-            writer.write(filteredContent.toString());
+    static int calculateDeviationCount(List<Long> sizes) {
+        List<Long> sortedSizes = new ArrayList<>(sizes);
+        Collections.sort(sortedSizes);
+
+        int deviationCount = 0;
+        for (int x = 0; x < sortedSizes.size() - 1; x++) {
+            long size1 = sortedSizes.get(x);
+            long size2 = sortedSizes.get(x + 1);
+            long diff = Math.abs(size1 - size2);
+            double percentDiff = (100.0 * diff) / Math.min(size1, size2);
+
+            if (percentDiff > 10.0) {
+                deviationCount++;
+            }
         }
+        return deviationCount;
     }
 
     private void postDownloadChecks(List<File> downloadedFiles) throws IOException {
@@ -250,24 +269,7 @@ public class HtmlChecker implements Runnable {
             LOG.info("File " + file.getName() + " has size: " + fileSize);
         }
 
-        int deviationCount = 0;
-
-        List<Long> sortedSizes = new ArrayList<>(sizes);
-        Collections.sort(sortedSizes);
-
-        for (int x = 0; x < sortedSizes.size() - 1; x++) {
-            long size1 = sortedSizes.get(x);
-            long size2 = sortedSizes.get(x + 1);
-            long diff = Math.abs(size1 - size2);
-            double percentDiff = (100.0 * diff) / Math.min(size1, size2);
-
-            LOG.info("Difference between {} and {} is {} bytes ({}%)", size1, size2, diff, percentDiff);
-
-            // Use a clear threshold, e.g., 10% difference
-            if (percentDiff > 10.0) {
-                deviationCount++;
-            }
-        }
+        int deviationCount = calculateDeviationCount(new ArrayList<>(sizes));
 
         LOG.info("Deviation count " + deviationCount);
 
