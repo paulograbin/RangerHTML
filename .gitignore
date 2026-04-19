@@ -40,3 +40,6 @@ build/
 
 ### Application logs
 logs/**
+
+### Native binary
+download_native_experiment
