@@ -116,9 +116,9 @@ public class HtmlChecker implements Runnable {
         }
 
         executorService.shutdown();
-        boolean b = executorService.awaitTermination(5, TimeUnit.SECONDS);
+        boolean terminated = executorService.awaitTermination(5, TimeUnit.SECONDS);
 
-        if (b) {
+        if (terminated) {
             LOG.info("Executor terminated successfully");
         } else {
             LOG.info("Executor timed out");
