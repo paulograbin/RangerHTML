@@ -9,16 +9,25 @@
     <version>2.2</version>
 
     <properties>
-        <maven.compiler.source>25</maven.compiler.source>
-        <maven.compiler.target>25</maven.compiler.target>
+        <java.version>25</java.version>
+        <maven.compiler.source>${java.version}</maven.compiler.source>
+        <maven.compiler.target>${java.version}</maven.compiler.target>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+        <javalin.version>6.6.0</javalin.version>
+        <vue.version>3.2.37</vue.version>
+        <commons-lang3.version>3.18.0</commons-lang3.version>
+        <gson.version>2.13.1</gson.version>
+        <slf4j.version>2.0.16</slf4j.version>
+        <rabbitmq.version>5.25.0</rabbitmq.version>
+        <junit.version>5.11.4</junit.version>
+        <maven-assembly-plugin.version>3.8.0</maven-assembly-plugin.version>
     </properties>
 
     <dependencies>
         <dependency>
             <groupId>io.javalin</groupId>
             <artifactId>javalin-bundle</artifactId>
-            <version>6.6.0</version>
+            <version>${javalin.version}</version>
             <exclusions>
                 <exclusion>
                     <groupId>ch.qos.logback</groupId>
@@ -30,38 +39,38 @@
         <dependency>
             <groupId>org.webjars.npm</groupId>
             <artifactId>vue</artifactId>
-            <version>3.2.37</version>
+            <version>${vue.version}</version>
         </dependency>
 
         <dependency>
             <groupId>org.apache.commons</groupId>
             <artifactId>commons-lang3</artifactId>
-            <version>3.18.0</version>
+            <version>${commons-lang3.version}</version>
         </dependency>
 
         <dependency>
             <groupId>com.google.code.gson</groupId>
             <artifactId>gson</artifactId>
-            <version>2.13.1</version>
+            <version>${gson.version}</version>
         </dependency>
 
         <dependency>
             <groupId>org.slf4j</groupId>
             <artifactId>slf4j-simple</artifactId>
-            <version>2.0.16</version>
+            <version>${slf4j.version}</version>
         </dependency>
 
         <!-- https://mvnrepository.com/artifact/com.rabbitmq/amqp-client -->
         <dependency>
             <groupId>com.rabbitmq</groupId>
             <artifactId>amqp-client</artifactId>
-            <version>5.25.0</version>
+            <version>${rabbitmq.version}</version>
         </dependency>
 
         <dependency>
             <groupId>org.junit.jupiter</groupId>
             <artifactId>junit-jupiter</artifactId>
-            <version>5.11.4</version>
+            <version>${junit.version}</version>
             <scope>test</scope>
         </dependency>
     </dependencies>
@@ -70,8 +79,9 @@
         <plugins>
             <plugin>
                 <artifactId>maven-assembly-plugin</artifactId>
+                <version>${maven-assembly-plugin.version}</version>
                 <configuration>
-                     <appendAssemblyId>false</appendAssemblyId>
+                    <appendAssemblyId>false</appendAssemblyId>
                     <archive>
                         <manifest>
                             <mainClass>com.paulograbin.Main</mainClass>
