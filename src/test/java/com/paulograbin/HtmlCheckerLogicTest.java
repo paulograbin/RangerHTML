@@ -10,6 +10,46 @@ import static org.junit.jupiter.api.Assertions.*;
 class HtmlCheckerLogicTest {
 
     @Nested
+    class RouteCookieTest {
+
+        /*
+         * These strings are Set-Cookie header values: name=value, optionally followed
+         * by semicolon-separated attributes. Both "ROUTE=node-1" and
+         * "ROUTE=.node-1; Path=/; Secure" are valid. A dot in the value and a
+         * trailing semicolon are not required.
+         *
+         * "default" and "invalid" are malformed: they have no name=value pair.
+         * The following are valid cookie syntax but unusable for server discovery:
+         * - "SESSION=abc; Path=/": a different cookie, not ROUTE.
+         * - "ROUTE=; Path=/": an empty value cannot identify a backend.
+         * - "ROUTE=node-1; Max-Age=0": instructs the client to delete the cookie.
+         */
+
+        @Test
+        void ignoresMissingUnrelatedAndMalformedCookies() {
+            assertTrue(HtmlChecker.extractRouteCookie(List.of()).isEmpty());
+            assertTrue(HtmlChecker.extractRouteCookie(List.of("SESSION=abc; Path=/", "default", "ROUTE=; Path=/")).isEmpty());
+        }
+
+        @Test
+        void acceptsValuesWithoutDotsOrTrailingAttributes() {
+            assertEquals("node-1", HtmlChecker.extractRouteCookie(List.of("ROUTE=node-1")).orElseThrow());
+            assertEquals(".node-1", HtmlChecker.extractRouteCookie(List.of("ROUTE=.node-1; Path=/; Secure")).orElseThrow());
+        }
+
+        @Test
+        void preservesTheFullCookieValue() {
+            assertEquals("prefix.node-1", HtmlChecker.extractRouteCookie(List.of("ROUTE=prefix.node-1; Path=/")).orElseThrow());
+        }
+
+        @Test
+        void skipsMalformedAndDeletedCookiesBeforeAValidCookie() {
+            assertEquals("node-2", HtmlChecker.extractRouteCookie(List.of("invalid",
+                    "ROUTE=node-1; Max-Age=0", "ROUTE=node-2")).orElseThrow());
+        }
+    }
+
+    @Nested
     class FilterHtmlContentTest {
 
         @Test

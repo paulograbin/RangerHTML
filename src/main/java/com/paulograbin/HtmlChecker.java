@@ -8,6 +8,7 @@ import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.net.HttpCookie;
 import java.net.URI;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
@@ -26,13 +27,13 @@ import java.util.Date;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
-import java.util.concurrent.TimeUnit;
 
 import static com.paulograbin.Main.FULL_DATE_FORMAT;
 
@@ -44,19 +45,20 @@ public class HtmlChecker implements Runnable {
     private final Map<String, String> servers = new ConcurrentHashMap<>(5);
     private final String directoryLocation;
     private final String ntfyTopic;
+    private final URI targetUri;
 
     private static final int EXPECTED_SERVER_NODE_COUNT = 3;
     private static final int DISCOVERY_REQUESTS_COUNT = EXPECTED_SERVER_NODE_COUNT * 5;
 
     public HtmlChecker(String diretoryLocation, String ntfyTopic) {
+        this(diretoryLocation, ntfyTopic, URI.create("https://www.lkbennett.com"));
+    }
+
+    HtmlChecker(String diretoryLocation, String ntfyTopic, URI targetUri) {
         directoryLocation = diretoryLocation;
         this.ntfyTopic = ntfyTopic;
-
-        try {
-            fetchServers();
-        } catch (IOException | InterruptedException e) {
-            throw new RuntimeException(e);
-        }
+        this.targetUri = targetUri;
+        fetchServers();
 
         if (servers.size() != EXPECTED_SERVER_NODE_COUNT) {
             LOG.warn("Did not find {} servers, instead found {}... please check storefront configuration", EXPECTED_SERVER_NODE_COUNT, servers.size());
@@ -77,58 +79,70 @@ public class HtmlChecker implements Runnable {
         }
     }
 
-    private void fetchServers() throws IOException, InterruptedException {
+    private void fetchServers() {
         Runnable discoverServer = () -> {
-            HttpClient client = HttpClient.newBuilder().connectTimeout(Duration.ofSeconds(5)).build();
             HttpRequest request = HttpRequest.newBuilder()
-                    .uri(URI.create("https://www.lkbennett.com"))
+                    .uri(targetUri)
+                    .timeout(Duration.ofSeconds(10))
                     .build();
 
-            HttpResponse<String> response;
-            try {
-                response = client.send(request, HttpResponse.BodyHandlers.ofString());
-            } catch (IOException | InterruptedException e) {
-                throw new RuntimeException(e);
+            try (HttpClient client = HttpClient.newBuilder().connectTimeout(Duration.ofSeconds(5)).build()) {
+                var response = client.send(request, HttpResponse.BodyHandlers.discarding());
+                var routeCookie = extractRouteCookie(response.headers().allValues("set-cookie"));
+                if (routeCookie.isEmpty()) {
+                    LOG.warn("Discovery response from {} returned HTTP {} without a usable ROUTE cookie; skipping it",
+                            response.uri(), response.statusCode());
+                    return;
+                }
+                servers.put(routeCookie.get(), "");
+            } catch (IOException e) {
+                LOG.warn("Server discovery request failed: {}", e.getMessage());
+            } catch (InterruptedException e) {
+                Thread.currentThread().interrupt();
+                LOG.warn("Server discovery request interrupted");
             }
-
-            var routeCookie = response.headers()
-                    .allValues("set-cookie")
-                    .stream()
-                    .filter(string -> string.startsWith("ROUTE="))
-                    .findAny().orElse("default");
-
-            var start = routeCookie.indexOf(".");
-            routeCookie = routeCookie.substring(start, routeCookie.indexOf(";"));
-
-            servers.put(routeCookie, "");
         };
 
-        ExecutorService executorService = Executors.newFixedThreadPool(DISCOVERY_REQUESTS_COUNT);
-        List<CompletableFuture<Void>> futures = new ArrayList<>(DISCOVERY_REQUESTS_COUNT);
-
-        for (int i = 0; i < DISCOVERY_REQUESTS_COUNT; i++) {
-            futures.add(CompletableFuture.runAsync(discoverServer, executorService));
+        try (ExecutorService executorService = Executors.newFixedThreadPool(DISCOVERY_REQUESTS_COUNT)) {
+            List<CompletableFuture<Void>> futures = new ArrayList<>(DISCOVERY_REQUESTS_COUNT);
+            for (int i = 0; i < DISCOVERY_REQUESTS_COUNT; i++) {
+                futures.add(CompletableFuture.runAsync(discoverServer, executorService));
+            }
+            CompletableFuture.allOf(futures.toArray(new CompletableFuture[0])).join();
         }
-
-        CompletableFuture.allOf(futures.toArray(new CompletableFuture[0])).join();
 
         LOG.info("Servers ({}):", servers.size());
         for (String server : servers.keySet()) {
             LOG.info("Server {}", server);
         }
 
-        executorService.shutdown();
-        boolean terminated = executorService.awaitTermination(5, TimeUnit.SECONDS);
+    }
 
-        if (terminated) {
-            LOG.info("Executor terminated successfully");
-        } else {
-            LOG.info("Executor timed out");
+    static Optional<String> extractRouteCookie(List<String> setCookieHeaders) {
+        for (String header : setCookieHeaders) {
+            try {
+                for (HttpCookie cookie : HttpCookie.parse(header)) {
+                    if (cookie.getName().equals("ROUTE") && !cookie.getValue().isBlank() && !cookie.hasExpired()) {
+                        return Optional.of(cookie.getValue());
+                    }
+                }
+            } catch (IllegalArgumentException e) {
+                // Ignore malformed headers and continue looking for a valid ROUTE cookie.
+            }
         }
+        return Optional.empty();
     }
 
     private void runInternal() throws InterruptedException, IOException {
         LOG.info("Waking up at {}", LocalDateTime.now());
+
+        if (servers.size() < EXPECTED_SERVER_NODE_COUNT) {
+            fetchServers();
+        }
+        if (servers.isEmpty()) {
+            LOG.warn("No backend servers discovered; skipping HTML comparison and retrying discovery on the next scheduled check");
+            return;
+        }
 
         Instant now = Instant.now();
         Path path = Paths.get(directoryLocation);
@@ -139,64 +153,60 @@ public class HtmlChecker implements Runnable {
             path.toFile().mkdir();
         }
 
-        List<String> actualServers = new ArrayList<>(EXPECTED_SERVER_NODE_COUNT);
-        ExecutorService executorService = Executors.newFixedThreadPool(EXPECTED_SERVER_NODE_COUNT);
+        List<String> actualServers = new CopyOnWriteArrayList<>();
         List<File> downloadedFiles = new CopyOnWriteArrayList<>();
 
-        var randomString = RandomStringUtils.secure().nextAlphanumeric(5);
-        List<CompletableFuture> futures = new ArrayList<>(5);
+        try (ExecutorService executorService = Executors.newFixedThreadPool(EXPECTED_SERVER_NODE_COUNT)) {
+            var randomString = RandomStringUtils.secure().nextAlphanumeric(5);
+            List<CompletableFuture<Void>> futures = new ArrayList<>(5);
 
-        for (String podName : servers.keySet()) {
-            Instant start = Instant.now();
+            for (String podName : servers.keySet()) {
+                Instant start = Instant.now();
 
-            var future = CompletableFuture.runAsync(() -> {
-                try {
-                    HttpClient client = HttpClient.newBuilder().connectTimeout(Duration.ofSeconds(5)).build();
-                    HttpRequest request = HttpRequest.newBuilder()
-                            .uri(URI.create("https://www.lkbennett.com"))
-                            .setHeader("cookie", "ROUTE=" + podName + ";")
-                            .build();
+                var future = CompletableFuture.runAsync(() -> {
+                    try (HttpClient client = HttpClient.newBuilder().connectTimeout(Duration.ofSeconds(5)).build()) {
+                        HttpRequest request = HttpRequest.newBuilder()
+                                .uri(targetUri)
+                                .timeout(Duration.ofSeconds(10))
+                                .setHeader("cookie", "ROUTE=" + podName + ";")
+                                .build();
 
-                    HttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString());
+                        HttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString());
 
-                    var routeCookie = response.headers().allValues("set-cookie").stream()
-                            .filter(string -> string.startsWith("ROUTE="))
-                            .findAny()
-                            .orElse(podName);
+                        var routeCookie = extractRouteCookie(response.headers().allValues("set-cookie"))
+                                .orElse(podName);
 
-                    if (!podName.equalsIgnoreCase(routeCookie)) {
-                        routeCookie = routeCookie.replace("ROUTE=", "");
-                        routeCookie = routeCookie.substring(0, routeCookie.indexOf(";"));
+                        if (!podName.equals(routeCookie)) {
+                            LOG.error("A DIFFERENT SERVER RESPONDED");
 
-                        LOG.error("A DIFFERENT SERVER RESPONDED");
+                            servers.remove(podName);
+                            servers.put(routeCookie, "");
+                        }
 
-                        servers.remove(podName);
-                        servers.put(routeCookie, "");
+                        actualServers.add(routeCookie);
+
+                        if (podName.equalsIgnoreCase(routeCookie)) {
+                        } else {
+                            LOG.info("I called {} but got {}", podName, routeCookie);
+                        }
+
+                        var file = saveHtmlToDisk(directoryLocation, routeCookie, response.body(), randomString);
+                        filterFileContent(file);
+
+                        downloadedFiles.add(file.toFile());
+                    } catch (IOException | InterruptedException e) {
+                        LOG.error("Could not download the file: " + e.getMessage() + ", because " + e.getCause());
                     }
 
-                    actualServers.add(routeCookie);
+                    long millis = Duration.between(start, Instant.now()).toMillis();
+                    LOG.info("Thread {} finished in {} server name {}", Thread.currentThread().getName(), millis, podName);
+                }, executorService);
 
-                    if (podName.equalsIgnoreCase(routeCookie)) {
-                    } else {
-                        LOG.info("I called {} but got {}", podName, routeCookie);
-                    }
+                futures.add(future);
+            }
 
-                    var file = saveHtmlToDisk(directoryLocation, routeCookie, response.body(), randomString);
-                    filterFileContent(file);
-
-                    downloadedFiles.add(file.toFile());
-                } catch (IOException | InterruptedException e) {
-                    LOG.error("Could not download the file: " + e.getMessage() + ", because " + e.getCause());
-                }
-
-                long millis = Duration.between(start, Instant.now()).toMillis();
-                LOG.info("Thread {} finished in {} server name {}", Thread.currentThread().getName(), millis, podName);
-            }, executorService);
-
-            futures.add(future);
+            CompletableFuture.allOf(futures.toArray(new CompletableFuture[0])).join();
         }
-
-        CompletableFuture.allOf(futures.toArray(new CompletableFuture[0])).join();
 
         postDownloadChecks(downloadedFiles);
 
