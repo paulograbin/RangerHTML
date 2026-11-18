@@ -50,10 +50,9 @@ Original idea came from the fact that some server instances would not have speci
 
 ```bash
 mvn clean package
-
-# Rename the fat JAR for convenience
-mv target/checker-2.2-jar-with-dependencies.jar target/checker-2.2.jar
 ```
+
+This produces `target/checker-2.2.jar`, an executable JAR containing all runtime dependencies.
 
 ### Native image (optional)
 
@@ -63,7 +62,7 @@ Requires a GraalVM JDK. Produces a standalone binary with faster startup:
 mvn clean package
 
 native-image --gc=epsilon -O3 -march=native \
-  -cp target/checker-2.2-jar-with-dependencies.jar \
+  -cp target/checker-2.2.jar \
   -o download_native_experiment com.paulograbin.Main
 ```
 
@@ -73,7 +72,7 @@ native-image --gc=epsilon -O3 -march=native \
 NTFY_TOPIC=your-secret-topic java \
   -XX:+UnlockExperimentalVMOptions -XX:+UseShenandoahGC \
   -XX:ShenandoahGCMode=generational \
-  -jar checker-2.2.jar [html_files_location]
+  -jar target/checker-2.2.jar [html_files_location]
 ```
 
 Once started:
