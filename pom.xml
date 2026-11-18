@@ -21,6 +21,7 @@
         <rabbitmq.version>5.25.0</rabbitmq.version>
         <junit.version>5.11.4</junit.version>
         <maven-assembly-plugin.version>3.8.0</maven-assembly-plugin.version>
+        <versions-maven-plugin.version>2.18.0</versions-maven-plugin.version>
     </properties>
 
     <dependencies>
@@ -77,6 +78,11 @@
 
     <build>
         <plugins>
+            <plugin>
+                <groupId>org.codehaus.mojo</groupId>
+                <artifactId>versions-maven-plugin</artifactId>
+                <version>${versions-maven-plugin.version}</version>
+            </plugin>
             <plugin>
                 <artifactId>maven-assembly-plugin</artifactId>
                 <version>${maven-assembly-plugin.version}</version>
