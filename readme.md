@@ -24,10 +24,10 @@ Original idea came from the fact that some server instances would not have speci
 
 | Component | Technology |
 |---|---|
-| Backend | Java 25, [Javalin](https://javalin.io/) 6.6.0 |
+| Backend | Java 25, [Javalin](https://javalin.io/) 7.2.4 |
 | Frontend | Vue 3.2.37, Bootstrap 5, Chart.js |
-| JSON | Gson 2.13.1 |
-| Utilities | Apache Commons Lang 3.17.0 |
+| JSON | Gson 2.15.0 |
+| Utilities | Apache Commons Lang 3.22.0 |
 | Logging | SLF4J Simple 2.0.16 |
 | Alerts | [ntfy.sh](https://ntfy.sh) push notifications |
 | Messaging | RabbitMQ AMQP Client 5.25.0 (prepared, not active) |

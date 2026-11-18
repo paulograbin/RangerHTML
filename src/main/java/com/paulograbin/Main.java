@@ -3,8 +3,8 @@ package com.paulograbin;
 import com.paulograbin.web.ExternalAssetController;
 import com.paulograbin.web.FilesController;
 import io.javalin.Javalin;
-import io.javalin.event.HandlerMetaInfo;
-import io.javalin.event.LifecycleEventListener;
+import io.javalin.compression.CompressionStrategy;
+import io.javalin.plugin.bundled.JavalinVuePlugin;
 import io.javalin.vue.VueComponent;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -20,7 +20,6 @@ import java.util.List;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
-import java.util.function.Consumer;
 
 public class Main {
 
@@ -52,40 +51,35 @@ public class Main {
             ntfyTopic = "";
         }
 
-        FilesController filesController = new FilesController(htmlFilesLocation);
-
-        var app = Javalin.create(config -> {
-            config.useVirtualThreads = true;
-            config.http.gzipOnlyCompression();
-//            config.staticFiles.add("/public", Location.CLASSPATH);
-            config.staticFiles.enableWebjars();
-//            config.bundledPlugins.enableDevLogging();
-            config.vue.vueInstanceNameInJs = "app";
-        });
-
-        LifecycleEventListener aa = () -> LOG.info("STARTOU ESSA BAGACA");
-        Consumer<HandlerMetaInfo> bb = (HandlerMetaInfo handlerMetaInfo) -> LOG.info("HandlerMetaInfo {}", handlerMetaInfo);
-
-        app.events(event -> event.serverStarted(aa));
-        app.events(event -> event.handlerAdded(bb));
-
-        app.get("/", new VueComponent("hello-world"));
-        app.get("/pdp", new VueComponent("pdp"));
-        app.get("/file/{fileName}", filesController::loadFile);
-        app.get("/api/files", filesController::loadAllFiles);
-
-        app.get("/_ui/*", ExternalAssetController::get);
-        app.get("/_s/login-status", FakeController::getLogin);
-        app.get("/cart/miniCartUpdate", FakeController::getMiniCart);
-        app.get("/globalecountry/info", FakeController::getInfo);
-
-//        app.before(ctx -> LOG.info("Handling call to {}", ctx.path()));
-
-        app.start(7070);
+        createApp(htmlFilesLocation).start(7070);
 
         ScheduledExecutorService executorService = Executors.newScheduledThreadPool(1);
         HtmlChecker checker = new HtmlChecker(htmlFilesLocation, ntfyTopic);
         executorService.scheduleAtFixedRate(checker, 0, 1, TimeUnit.MINUTES);
+    }
+
+    static Javalin createApp(String htmlFilesLocation) {
+        FilesController filesController = new FilesController(htmlFilesLocation);
+
+        return Javalin.create(config -> {
+            config.concurrency.useVirtualThreads = true;
+            config.http.compressionStrategy = CompressionStrategy.GZIP;
+            config.staticFiles.enableWebjars();
+            config.registerPlugin(new JavalinVuePlugin(vue -> vue.vueInstanceNameInJs = "app"));
+
+            config.events.serverStarted(() -> LOG.info("STARTOU ESSA BAGACA"));
+            config.events.handlerAdded(handlerMetaInfo -> LOG.info("HandlerMetaInfo {}", handlerMetaInfo));
+
+            config.routes.get("/", new VueComponent("hello-world"));
+            config.routes.get("/pdp", new VueComponent("pdp"));
+            config.routes.get("/file/{fileName}", filesController::loadFile);
+            config.routes.get("/api/files", filesController::loadAllFiles);
+
+            config.routes.get("/_ui/*", ExternalAssetController::get);
+            config.routes.get("/_s/login-status", FakeController::getLogin);
+            config.routes.get("/cart/miniCartUpdate", FakeController::getMiniCart);
+            config.routes.get("/globalecountry/info", FakeController::getInfo);
+        });
     }
 
     private static boolean compareFiles(File file1, File file2) {

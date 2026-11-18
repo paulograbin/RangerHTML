@@ -6,17 +6,17 @@
 
     <groupId>com.paulograbin</groupId>
     <artifactId>checker</artifactId>
-    <version>2.2</version>
+    <version>2.3</version>
 
     <properties>
         <java.version>25</java.version>
         <maven.compiler.source>${java.version}</maven.compiler.source>
         <maven.compiler.target>${java.version}</maven.compiler.target>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-        <javalin.version>6.6.0</javalin.version>
+        <javalin.version>7.2.4</javalin.version>
         <vue.version>3.2.37</vue.version>
-        <commons-lang3.version>3.18.0</commons-lang3.version>
-        <gson.version>2.13.1</gson.version>
+        <commons-lang3.version>3.22.0</commons-lang3.version>
+        <gson.version>2.15.0</gson.version>
         <slf4j.version>2.0.16</slf4j.version>
         <rabbitmq.version>5.25.0</rabbitmq.version>
         <junit.version>5.11.4</junit.version>
