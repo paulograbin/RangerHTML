@@ -34,6 +34,7 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 import static com.paulograbin.Main.FULL_DATE_FORMAT;
 
@@ -51,7 +52,7 @@ public class HtmlChecker implements Runnable {
     private static final int DISCOVERY_REQUESTS_COUNT = EXPECTED_SERVER_NODE_COUNT * 5;
 
     public HtmlChecker(String diretoryLocation, String ntfyTopic) {
-        this(diretoryLocation, ntfyTopic, URI.create("https://www.lkbennett.com"));
+        this(diretoryLocation, ntfyTopic, URI.create("https://lkbennett.com"));
     }
 
     HtmlChecker(String diretoryLocation, String ntfyTopic, URI targetUri) {
@@ -80,6 +81,7 @@ public class HtmlChecker implements Runnable {
     }
 
     private void fetchServers() {
+        AtomicBoolean missingCookieHeadersLogged = new AtomicBoolean();
         Runnable discoverServer = () -> {
             HttpRequest request = HttpRequest.newBuilder()
                     .uri(targetUri)
@@ -90,8 +92,11 @@ public class HtmlChecker implements Runnable {
                 var response = client.send(request, HttpResponse.BodyHandlers.discarding());
                 var routeCookie = extractRouteCookie(response.headers().allValues("set-cookie"));
                 if (routeCookie.isEmpty()) {
-                    LOG.warn("Discovery response from {} returned HTTP {} without a usable ROUTE cookie; skipping it",
-                            response.uri(), response.statusCode());
+                    // Only the first missing-cookie response in this concurrent batch logs its headers.
+                    if (missingCookieHeadersLogged.compareAndSet(false, true)) {
+                        LOG.warn("Discovery response from {} returned HTTP {} without a usable ROUTE cookie; skipping it. Response headers: {}",
+                                response.uri(), response.statusCode(), response.headers().map());
+                    }
                     return;
                 }
                 servers.put(routeCookie.get(), "");
