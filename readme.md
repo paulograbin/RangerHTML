@@ -2,9 +2,15 @@
 
 A monitoring tool that detects content inconsistencies across load-balanced server nodes. It periodically downloads HTML from each backend node of a website, compares the responses, and sends push notifications when significant differences are found.
 
-Currently configured to monitor [lkbennett.com](https://www.lkbennett.com), where multiple server nodes behind a load balancer should serve identical content. The target site and expected server count are hardcoded — see [Limitations](#limitations).
+Originally built to monitor [lkbennett.com](https://lkbennett.com), where multiple server nodes behind a load balancer were expected to serve identical content. The target site and expected server count are hardcoded — see [Limitations](#limitations).
 
 Original idea came from the fact that some server instances would not have specific marketing campaign banners due to improper caching keys.
+
+## Current status: L.K.Bennett monitoring no longer works
+
+L.K.Bennett has changed its platform. As of November 18, 2026, its website returns Shopify cookies and no longer provides the `ROUTE` cookie this app uses to discover and target individual backend servers. **The app can no longer perform its intended monitoring of L.K.Bennett.**
+
+The web server can still start, but the checker skips comparisons and retries discovery when no backend servers are found. Restoring monitoring requires adapting the app to the new platform or configuring a compatible target. See [the discovery investigation](COOKIE_DISCOVERY_FIX.md) for the observed responses and cookie-handling changes.
 
 ## How it works
 
