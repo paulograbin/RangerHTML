@@ -38,6 +38,7 @@ The web server can still start, but the checker skips comparisons and retries di
 | Alerts | [ntfy.sh](https://ntfy.sh) push notifications |
 | Messaging | RabbitMQ AMQP Client 5.25.0 (prepared, not active) |
 | Build | Maven, optional GraalVM native image |
+| Software bill of materials | [CycloneDX Maven Plugin](https://cyclonedx.github.io/cyclonedx-maven-plugin/) 2.9.3 |
 | Deployment | Systemd timer (Linux) |
 
 ## Prerequisites
@@ -54,11 +55,23 @@ The web server can still start, but the checker skips comparisons and retries di
 
 ## Building
 
+Google [Error Prone](https://errorprone.info/) runs automatically during Maven compilation of application and test code. Compiler warnings also fail the build because `-Werror` is enabled. Run `mvn clean compile` to see the findings. The compiler and Error Prone versions are declared in `pom.xml` properties.
+
 ```bash
 mvn clean package
 ```
 
 This produces `target/checker-2.2.jar`, an executable JAR containing all runtime dependencies.
+
+### Software bill of materials (SBOM)
+
+The [CycloneDX Maven Plugin](https://cyclonedx.github.io/cyclonedx-maven-plugin/) runs its `makeBom` goal automatically during the `package` phase. It generates `target/sbom.xml`, an XML inventory of the project and its dependencies, with the project classified as `library`. Its version is declared in the `dep.plugin.cyclonedx.version` property in `pom.xml`.
+
+To generate the SBOM without compiling or running tests:
+
+```bash
+mvn cyclonedx:makeBom
+```
 
 ### Native image (optional)
 

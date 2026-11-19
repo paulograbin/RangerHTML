@@ -1,0 +1,29 @@
+[WARNING] /Users/I841059/RangerHTML/src/main/java/com/paulograbin/Main.java:[91,28] [UnusedMethod] Method 'compareFiles' is never used.
+    (see https://errorprone.info/bugpattern/UnusedMethod)
+  Did you mean to remove this line?
+[WARNING] /Users/I841059/RangerHTML/src/main/java/com/paulograbin/Main.java:[29,42] [DateFormatConstant] DateFormat is not thread-safe, and should not be used as a constant field.
+    (see https://errorprone.info/bugpattern/DateFormatConstant)
+  Did you mean 'public static final ThreadLocal<SimpleDateFormat> fullDateFormat = ThreadLocal.withInitial(() -> new SimpleDateFormat("yyyy-MM-dd HH-mm-ss-SSSS"));' or 'public static final SimpleDateFormat fullDateFormat = new SimpleDateFormat("yyyy-MM-dd HH-mm-ss-SSSS");'?
+[WARNING] /Users/I841059/RangerHTML/src/main/java/com/paulograbin/Main.java:[64,44] [FutureReturnValueIgnored] Return value of methods returning Future must be checked. Ignoring returned Futures suppresses exceptions thrown from the code that completes the Future.
+    (see https://errorprone.info/bugpattern/FutureReturnValueIgnored)
+  Did you mean 'var _ = executorService.scheduleAtFixedRate(checker, 0, 1, TimeUnit.MINUTES);' or to remove this line?
+[WARNING] /Users/I841059/RangerHTML/src/main/java/com/paulograbin/HtmlChecker.java:[142,54] [JavaTimeDefaultTimeZone] LocalDateTime.now() is not allowed because it silently uses the system default time-zone. You must pass an explicit time-zone (e.g., ZoneId.of("America/Los_Angeles")) to this method.
+    (see https://errorprone.info/bugpattern/JavaTimeDefaultTimeZone)
+  Did you mean 'LOG.info("Waking up at {}", LocalDateTime.now(ZoneId.systemDefault()));'?
+[WARNING] /Users/I841059/RangerHTML/src/main/java/com/paulograbin/HtmlChecker.java:[235,30] [DefaultCharset] Implicit use of the platform default charset, which can result in differing behaviour between JVM executions or incorrect behavior if the encoding of the data source doesn't match expectations.
+    (see https://errorprone.info/bugpattern/DefaultCharset)
+  Did you mean 'String htmlContent = new String(Files.readAllBytes(file), UTF_8);' or 'String htmlContent = new String(Files.readAllBytes(file), Charset.defaultCharset());'?
+[WARNING] /Users/I841059/RangerHTML/src/main/java/com/paulograbin/HtmlChecker.java:[238,57] [DefaultCharset] Implicit use of the platform default charset, which can result in differing behaviour between JVM executions or incorrect behavior if the encoding of the data source doesn't match expectations.
+    (see https://errorprone.info/bugpattern/DefaultCharset)
+  Did you mean 'try (BufferedWriter writer = Files.newBufferedWriter(file.toFile().toPath(), UTF_8)) {' or 'try (BufferedWriter writer = Files.newBufferedWriter(file.toFile().toPath(), Charset.defaultCharset())) {'?
+[WARNING] /Users/I841059/RangerHTML/src/main/java/com/paulograbin/HtmlChecker.java:[244,43] [StringSplitter] String.split(String) has surprising behavior
+    (see https://errorprone.info/bugpattern/StringSplitter)
+  Did you mean 'Iterable<String> lines = Splitter.on('\n').split(htmlContent);'?
+[WARNING] /Users/I841059/RangerHTML/src/main/java/com/paulograbin/HtmlChecker.java:[335,56] [JavaUtilDate] Date has a bad API that leads to bugs; prefer java.time.Instant or LocalDate.
+    (see https://errorprone.info/bugpattern/JavaUtilDate)
+[WARNING] /Users/I841059/RangerHTML/src/main/java/com/paulograbin/web/FilesController.java:[34,33] [InlineTrivialConstant] Consider inlining this constant
+    (see https://errorprone.info/bugpattern/InlineTrivialConstant)
+  Did you mean to remove this line?
+[WARNING] /Users/I841059/RangerHTML/src/main/java/com/paulograbin/web/FilesController.java:[37,53] [BooleanLiteral] This expression can be written more clearly with a boolean literal.
+    (see https://errorprone.info/bugpattern/BooleanLiteral)
+  Did you mean 'private static final boolean TOMBSTONE = true;'?
