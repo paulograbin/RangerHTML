@@ -232,12 +232,10 @@ public class HtmlChecker implements Runnable {
     }
 
     private static void filterFileContent(Path file) throws IOException {
-        String htmlContent = new String(Files.readAllBytes(file));
+        String htmlContent = Files.readString(file, StandardCharsets.UTF_8);
         String filtered = filterHtmlContent(htmlContent);
 
-        try (BufferedWriter writer = new BufferedWriter(new FileWriter(file.toFile()))) {
-            writer.write(filtered);
-        }
+        Files.writeString(file, filtered, StandardCharsets.UTF_8);
     }
 
     static String filterHtmlContent(String htmlContent) {
